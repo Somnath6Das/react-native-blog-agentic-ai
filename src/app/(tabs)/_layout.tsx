@@ -49,7 +49,7 @@ export default function Layout() {
             tabBarIcon: ({ color, focused }) => (
               <FontAwesome5
                 name={focused ? "user-alt" : "user"}
-                size={28}
+                size={25}
                 color={focused ? "#ff5a00" : "#ff5a00"}
               />
             ),
