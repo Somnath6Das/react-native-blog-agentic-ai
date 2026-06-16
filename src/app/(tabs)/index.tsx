@@ -50,9 +50,6 @@ export default function HomeScreen() {
           <Ionicons name="menu" size={26} color={COLORS.black} />
         </TouchableOpacity>
         <Text style={styles.brand}>OUTDOOR</Text>
-        <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <View style={styles.avatar} />
-        </TouchableOpacity>
       </Animated.View>
 
       <ScrollView
@@ -118,14 +115,16 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
   },
   brand: {
+    flex: 1,
     ...FONTS.displayMD,
     fontSize: 20,
     color: COLORS.primary,
+    justifyContent: "center",
+    textAlign: "center",
     letterSpacing: 2,
   },
   avatar: {
