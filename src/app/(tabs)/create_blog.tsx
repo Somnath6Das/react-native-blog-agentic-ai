@@ -161,9 +161,6 @@ export default function ChatScreen() {
   );
 }
 
-// ── Styles ─────────────────────────────────────────────────────────────────
-const TEAL = "#10A37F";
-
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
@@ -294,7 +291,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: TEAL,
+    backgroundColor: "#10A37F",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 2,
