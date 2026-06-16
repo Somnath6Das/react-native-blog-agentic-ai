@@ -10,11 +10,7 @@ import {
   Platform,
   StatusBar,
 } from "react-native";
-import {
-  useFocusEffect,
-  useLocalSearchParams,
-  useRouter,
-} from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
@@ -25,7 +21,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { POSTS } from "../../../data/posts";
+import { POSTS } from "../../data/posts";
 import {
   COLORS,
   FONTS,
@@ -34,11 +30,11 @@ import {
   SHADOWS,
   SCREEN_WIDTH,
   SCREEN_HEIGHT,
-} from "../../../constants/theme";
+} from "../../constants/theme";
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
-const HERO_HEIGHT = SCREEN_HEIGHT * 0.45;
+const HERO_HEIGHT = SCREEN_HEIGHT * 0.35;
 const STATUS_HEIGHT =
   Platform.OS === "android" ? (StatusBar.currentHeight ?? 0) : 0;
 

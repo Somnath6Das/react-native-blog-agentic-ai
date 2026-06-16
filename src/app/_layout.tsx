@@ -17,7 +17,7 @@ const RootLayout = () => {
     >
       <Stack.Screen name="index" />
       <Stack.Screen
-        name="(tabs)/post/[id]"
+        name="post/[id]"
         options={{
           animation: "slide_from_right",
           animationDuration: 350,
