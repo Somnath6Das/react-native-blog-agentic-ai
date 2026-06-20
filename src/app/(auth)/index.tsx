@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import OtpField from "@/components/OtpField";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -21,19 +21,12 @@ const TEXT_MUTED = "#AAAAAA";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const signUp = () => {
-    router.push("/(auth)/signup");
-  };
-  const resetPassword = () => {
-    router.push("/(auth)/reset_password");
-  };
-
+  const [step, setStep] = useState(false);
+  const [otp, setOtp] = useState("");
   const handleLogin = () => {
     // Wire up your email/password login logic here
-    console.log("Login pressed", { email, password });
-    router.push("/(tabs)");
+    // router.push("/(tabs)");
+    setStep(true);
   };
 
   return (
@@ -74,32 +67,21 @@ export default function LoginScreen() {
               <Text style={styles.subtitle}>Sign in to continue</Text>
 
               {/* Email Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Email</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="johndoe@example.com"
-                  placeholderTextColor={TEXT_MUTED}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  value={email}
-                  onChangeText={setEmail}
-                />
-              </View>
-
-              {/* Password Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Password</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="••••••••"
-                  placeholderTextColor={TEXT_MUTED}
-                  secureTextEntry
-                  value={password}
-                  onChangeText={setPassword}
-                />
-              </View>
-
+              {!step && (
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Email</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="johndoe@example.com"
+                    placeholderTextColor={TEXT_MUTED}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    value={email}
+                    onChangeText={setEmail}
+                  />
+                </View>
+              )}
+              {step && <OtpField onTextChange={setOtp} />}
               {/* Login Button */}
               <TouchableOpacity
                 style={styles.loginBtn}
@@ -107,24 +89,6 @@ export default function LoginScreen() {
                 onPress={handleLogin}
               >
                 <Text style={styles.loginBtnText}>Login</Text>
-              </TouchableOpacity>
-
-              {/* Forgot Password */}
-              <TouchableOpacity
-                onPress={resetPassword}
-                style={styles.forgotBtn}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.forgotText}>Forgot your password?</Text>
-              </TouchableOpacity>
-
-              {/* Sign Up Button */}
-              <TouchableOpacity
-                style={styles.signUpBtn}
-                activeOpacity={0.85}
-                onPress={signUp}
-              >
-                <Text style={styles.signUpBtnText}>Sign Up</Text>
               </TouchableOpacity>
 
               {/* Footer links */}
@@ -237,10 +201,11 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   inputLabel: {
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: 16,
+
+    fontWeight: "500",
     color: TEXT_DARK,
-    marginBottom: 8,
+    marginBottom: 16,
   },
   input: {
     backgroundColor: WHITE,
@@ -264,7 +229,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 25,
     marginBottom: 16,
     shadowColor: ORANGE,
     shadowOpacity: 0.4,
@@ -314,6 +279,7 @@ const styles = StyleSheet.create({
 
   /* ── Footer ── */
   footer: {
+    marginTop: "auto",
     flexDirection: "row",
     justifyContent: "space-between",
     paddingTop: 8,

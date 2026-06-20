@@ -8,8 +8,6 @@ const Layout = () => {
       }}
     >
       <Stack.Screen name="index" />
-      <Stack.Screen name="signup" />
-      <Stack.Screen name="reset_password" />
     </Stack>
   );
 };
