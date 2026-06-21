@@ -7,15 +7,13 @@ from jose import jwt
 import os
 from dotenv import load_dotenv
 import uvicorn
-
+from datetime import datetime, timedelta, timezone
 
 load_dotenv() 
 
 app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"message": "Hello world"}
+
 
 
 # ================= CONFIG =================
@@ -43,6 +41,10 @@ class VerifyOtpRequest(BaseModel):
     email: EmailStr
     otp: str
 
+
+@app.get("/")
+def read_root():
+    return {"message": "Server running"}
 # ================= SEND OTP =================
 @app.post("/send-otp")
 async def send_otp(data: EmailRequest):
@@ -51,7 +53,7 @@ async def send_otp(data: EmailRequest):
 
         otp_store[data.email] = {
             "otp": otp,
-            "expires": datetime.utcnow() + timedelta(minutes=5)
+            "expires": datetime.now(timezone.utc) + timedelta(minutes=5)
         }
 
         message = MessageSchema(
@@ -73,26 +75,34 @@ async def send_otp(data: EmailRequest):
 # ================= VERIFY OTP =================
 @app.post("/verify-otp")
 async def verify_otp(data: VerifyOtpRequest):
-    record = otp_store.get(data.email)
+    try:
+        record = otp_store.get(data.email)
 
-    if not record:
-        raise HTTPException(status_code=400, detail="OTP not found")
+        if not record:
+            raise HTTPException(status_code=400, detail="OTP not found")
 
-    if record["expires"] < datetime.utcnow():
-        raise HTTPException(status_code=400, detail="OTP expired")
+        if record["expires"] < datetime.now(timezone.utc):
+            raise HTTPException(status_code=400, detail="OTP expired")
 
-    if record["otp"] != data.otp:
-        raise HTTPException(status_code=400, detail="Invalid OTP")
+        if record["otp"] != data.otp:
+            raise HTTPException(status_code=400, detail="Invalid OTP")
 
-    token = jwt.encode(
-        {"sub": data.email, "exp": datetime.utcnow() + timedelta(days=1)},
-        JWT_SECRET, 
-        algorithm=ALGORITHM
-    )
+        token = jwt.encode(
+            {"sub": data.email, "exp": datetime.now(timezone.utc) + timedelta(days=1)},
+            JWT_SECRET, 
+            algorithm=ALGORITHM
+        )
 
-    del otp_store[data.email]
+        del otp_store[data.email]
+        print(token)
+        return {"access_token": token, "token_type": "bearer"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("VERIFY ERROR:", e)
+        raise HTTPException(status_code=500, detail=str(e))
 
-    return {"access_token": token}
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
 
