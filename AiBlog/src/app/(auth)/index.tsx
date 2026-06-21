@@ -47,7 +47,7 @@ export default function SignupScreen() {
 
         const token = res.data.access_token;
 
-        console.log("JWT:", token);
+        // console.log("JWT:", token);
         // Save token securely
         await SecureStore.setItemAsync("token", token);
         // navigate to tabs

@@ -120,7 +120,7 @@ async def verify_otp(data: VerifyOtpRequest):
         )
 
         del otp_store[data.email]
-        print(token)
+        # print(token)
         return {"access_token": token, "token_type": "bearer"}
     
     except HTTPException:
