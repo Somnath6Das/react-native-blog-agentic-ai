@@ -1,4 +1,6 @@
 import OtpField from "@/components/OtpField";
+import axios from "axios";
+import { router } from "expo-router";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -12,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import * as SecureStore from "expo-secure-store";
 const YELLOW = "#F5C518";
 const ORANGE = "#F0A500";
 const WHITE = "#FFFFFF";
@@ -23,10 +25,38 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [step, setStep] = useState(false);
   const [otp, setOtp] = useState("");
-  const handleLogin = () => {
-    // Wire up your email/password login logic here
-    // router.push("/(tabs)");
-    setStep(true);
+
+  const handleLogin = async () => {
+    try {
+      if (!step) {
+        // Step 1: Send OTP
+        await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/send-otp`, {
+          email,
+        });
+
+        setStep(true);
+      } else {
+        // Step 2: Verify OTP
+        const res = await axios.post(
+          `${process.env.EXPO_PUBLIC_API_URL}/verify-otp`,
+          {
+            email,
+            otp,
+          },
+        );
+
+        const token = res.data.access_token;
+
+        console.log("JWT:", token);
+        // Save token securely
+        await SecureStore.setItemAsync("token", token);
+        // store token (AsyncStorage)
+        // navigate to tabs
+        router.push("/(tabs)");
+      }
+    } catch (err: any) {
+      console.log(err.response?.data || err.message);
+    }
   };
 
   return (
