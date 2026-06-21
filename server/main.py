@@ -75,7 +75,7 @@ def get_me(user=Depends(verify_token)):
 async def send_otp(data: EmailRequest):
     try:
         otp = str(random.randint(100000, 999999))
-
+        print(otp)
         otp_store[data.email] = {
             "otp": otp,
             "expires": datetime.now(timezone.utc) + timedelta(minutes=5)
@@ -121,7 +121,7 @@ async def verify_otp(data: VerifyOtpRequest):
 
         del otp_store[data.email]
         # print(token)
-        return {"access_token": token, "token_type": "bearer"}
+        return {"access_token": token, "token_type": "bearer", "email": data.email}
     
     except HTTPException:
         raise
