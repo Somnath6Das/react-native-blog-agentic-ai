@@ -25,7 +25,7 @@ export default function OtpField({ onTextChange }: Props) {
             marginVertical: 30,
           },
           pinCodeTextStyle: { color: "black" },
-          focusStickStyle: { borderColor: "#f1b023ff" },
+          focusStickStyle: { borderColor: "#f1b023ff", borderWidth: 2 },
           pinCodeContainerStyle: { backgroundColor: "white" },
         }}
       />

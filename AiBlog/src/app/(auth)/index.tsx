@@ -21,12 +21,12 @@ const WHITE = "#FFFFFF";
 const TEXT_DARK = "#1A1A1A";
 const TEXT_MUTED = "#AAAAAA";
 
-export default function LoginScreen() {
+export default function SignupScreen() {
   const [email, setEmail] = useState("");
   const [step, setStep] = useState(false);
   const [otp, setOtp] = useState("");
 
-  const handleLogin = async () => {
+  const handleSignup = async () => {
     try {
       if (!step) {
         // Step 1: Send OTP
@@ -50,9 +50,8 @@ export default function LoginScreen() {
         console.log("JWT:", token);
         // Save token securely
         await SecureStore.setItemAsync("token", token);
-        // store token (AsyncStorage)
         // navigate to tabs
-        // router.push("/(tabs)");
+        if (token) router.push("/(tabs)");
       }
     } catch (err: any) {
       console.log(err.response?.data || err.message);
@@ -93,8 +92,8 @@ export default function LoginScreen() {
 
             {/* ── White Card ── */}
             <View style={styles.card}>
-              <Text style={styles.title}>Login</Text>
-              <Text style={styles.subtitle}>Sign in to continue</Text>
+              <Text style={styles.title}>Sign up</Text>
+              <Text style={styles.subtitle}>Sign up to continue</Text>
 
               {/* Email Input */}
               {!step && (
@@ -114,11 +113,11 @@ export default function LoginScreen() {
               {step && <OtpField onTextChange={setOtp} />}
               {/* Login Button */}
               <TouchableOpacity
-                style={styles.loginBtn}
+                style={styles.signupBtn}
                 activeOpacity={0.85}
-                onPress={handleLogin}
+                onPress={handleSignup}
               >
-                <Text style={styles.loginBtnText}>Login</Text>
+                <Text style={styles.signupBtnText}>Sign up</Text>
               </TouchableOpacity>
 
               {/* Footer links */}
@@ -253,13 +252,12 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
-  /* ── Login button ── */
-  loginBtn: {
+  signupBtn: {
     backgroundColor: YELLOW,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: "center",
-    marginTop: 25,
+    marginTop: 14,
     marginBottom: 16,
     shadowColor: ORANGE,
     shadowOpacity: 0.4,
@@ -267,44 +265,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
-  loginBtnText: {
+  signupBtnText: {
     fontSize: 16,
     fontWeight: "700",
     color: WHITE,
     letterSpacing: 0.5,
-  },
-
-  /* ── Forgot password ── */
-  forgotBtn: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  forgotText: {
-    fontSize: 13,
-    color: TEXT_MUTED,
-  },
-
-  /* ── Sign Up Button ── */
-  signUpBtn: {
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: WHITE,
-    borderRadius: 14,
-    paddingVertical: 14,
-    borderWidth: 1.5,
-    borderColor: "#E5E5E5",
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-    marginBottom: 24,
-  },
-  signUpBtnText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: TEXT_DARK,
-    textAlign: "center",
   },
 
   /* ── Footer ── */

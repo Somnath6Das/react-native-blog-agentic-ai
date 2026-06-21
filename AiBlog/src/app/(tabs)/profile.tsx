@@ -7,36 +7,36 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as SecureStore from "expo-secure-store";
+import { router } from "expo-router";
 
 // Replace with your actual image source
 const AVATAR_URI = "https://randomuser.me/api/portraits/men/32.jpg";
 
-const TEAL = "#2BAE9C";
 const WHITE = "#FFFFFF";
 const TEXT_DARK = "#1A1A1A";
 const TEXT_MUTED = "#7A7A7A";
 const ICON_BG = "#FFF8E1";
-
+const YELLOW = "#F5C518";
+const ORANGE = "#F0A500";
 const AVATAR_SIZE = 120;
 const HEADER_HEIGHT = 140; // fixed header height
 const AVATAR_OVERLAP = AVATAR_SIZE / 1.5; // how much avatar hangs below header
 
 export default function ProfileScreen() {
+  const handleSignout = async () => {
+    await SecureStore.deleteItemAsync("token");
+    router.push("/(auth)");
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <StatusBar barStyle="light-content" backgroundColor={TEAL} />
+      <StatusBar barStyle="light-content" backgroundColor={ORANGE} />
 
       <View style={styles.root}>
         {/* ── Teal Header ── */}
         <View style={styles.header}>
-          <View style={styles.headerRow}>
-            <TouchableOpacity style={styles.iconBtn} activeOpacity={0.8}>
-              <Text style={styles.backArrow}>‹</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconBtn} activeOpacity={0.8}>
-              <Text style={styles.settingsIcon}>⚙</Text>
-            </TouchableOpacity>
-          </View>
+          <View style={styles.headerRow}></View>
         </View>
 
         {/* ── Grey Card ── */}
@@ -69,6 +69,13 @@ export default function ProfileScreen() {
         <View style={styles.avatarWrapper}>
           <Image source={{ uri: AVATAR_URI }} style={styles.avatar} />
         </View>
+        <TouchableOpacity
+          style={styles.signoutBtn}
+          activeOpacity={0.85}
+          onPress={handleSignout}
+        >
+          <Text style={styles.signoutBtnText}>Sign out</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -77,7 +84,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: TEAL, // matches header so status bar area looks right
+    backgroundColor: YELLOW, // matches header so status bar area looks right
   },
   root: {
     flex: 1,
@@ -87,7 +94,7 @@ const styles = StyleSheet.create({
   /* ── Header ── */
   header: {
     height: HEADER_HEIGHT,
-    backgroundColor: TEAL,
+    backgroundColor: YELLOW,
   },
   headerRow: {
     flexDirection: "row",
@@ -215,5 +222,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: TEXT_MUTED,
     marginTop: 2,
+  },
+
+  signoutBtn: {
+    backgroundColor: "#9fa5a1",
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginTop: 25,
+    marginBottom: 16,
+    margin: 10,
+    elevation: 4,
+  },
+  signoutBtnText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "black",
+    letterSpacing: 0.5,
   },
 });
