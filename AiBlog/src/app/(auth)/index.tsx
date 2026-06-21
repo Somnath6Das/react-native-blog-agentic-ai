@@ -52,7 +52,7 @@ export default function LoginScreen() {
         await SecureStore.setItemAsync("token", token);
         // store token (AsyncStorage)
         // navigate to tabs
-        router.push("/(tabs)");
+        // router.push("/(tabs)");
       }
     } catch (err: any) {
       console.log(err.response?.data || err.message);

@@ -1,33 +1,47 @@
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
 const RootLayout = () => {
-  // const checkAuth = async () => {
-  //   const token = await SecureStore.getItemAsync("token");
+  const [isAuthenticated, setIsAuthenticated] = useState<true | false | null>(
+    null,
+  ); // null = loading
 
-  //   if (!token) return false;
+  const checkAuth = async () => {
+    const token = await SecureStore.getItemAsync("token");
 
-  //   try {
-  //     await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/me`, {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
-  //     return true;
-  //   } catch {
-  //     await SecureStore.deleteItemAsync("token");
-  //     return false;
-  //   }
-  // };
-  // useEffect(() => {
-  //   checkAuth();
-  // }, []);
+    if (!token) {
+      setIsAuthenticated(false);
+      return;
+    }
+
+    try {
+      await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setIsAuthenticated(true);
+    } catch {
+      await SecureStore.deleteItemAsync("token");
+      setIsAuthenticated(false);
+    }
+  };
+
+  useEffect(() => {
+    checkAuth();
+    if (isAuthenticated === true) {
+      router.replace("/(tabs)");
+    } else if (isAuthenticated === false) {
+      router.replace("/(auth)");
+    }
+  }, [isAuthenticated]);
   return (
     <Stack
       screenOptions={{
         headerShown: false,
 
-        animation: "slide_from_right",
+        animation: "none",
         animationDuration: 320,
         contentStyle: { backgroundColor: "#fff" },
         gestureEnabled: true,

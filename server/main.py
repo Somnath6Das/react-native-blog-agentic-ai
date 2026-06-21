@@ -8,6 +8,9 @@ import os
 from dotenv import load_dotenv
 import uvicorn
 from datetime import datetime, timedelta, timezone
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt, JWTError
+from fastapi import Depends
 
 load_dotenv() 
 
@@ -21,9 +24,9 @@ JWT_SECRET = os.getenv("JWT_SECRET")  # better rename this
 ALGORITHM = "HS256"
 
 conf = ConnectionConfig(
-    MAIL_USERNAME=os.getenv("SENDER_MAIL"),
-    MAIL_PASSWORD=os.getenv("APP_PASSWORD"),  # Gmail App Password
-    MAIL_FROM=os.getenv("SENDER_MAIL"),
+    MAIL_USERNAME=os.getenv("SENDER_MAIL"), # type: ignore
+    MAIL_PASSWORD=os.getenv("APP_PASSWORD"),  # Gmail App Password # type: ignore
+    MAIL_FROM=os.getenv("SENDER_MAIL"), # type: ignore
     MAIL_PORT=587,
     MAIL_SERVER="smtp.gmail.com",
     MAIL_STARTTLS=True,
@@ -45,7 +48,29 @@ class VerifyOtpRequest(BaseModel):
 @app.get("/")
 def read_root():
     return {"message": "Server running"}
+
+
+# ================= Get Token =================
+
+security = HTTPBearer()
+
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM]) # type: ignore
+        return payload
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+
+@app.get("/me")
+def get_me(user=Depends(verify_token)):
+    return {"email": user["sub"]}
+
+
 # ================= SEND OTP =================
+
 @app.post("/send-otp")
 async def send_otp(data: EmailRequest):
     try:
@@ -58,9 +83,9 @@ async def send_otp(data: EmailRequest):
 
         message = MessageSchema(
             subject="Your OTP Code",
-            recipients=[data.email],
+            recipients=[data.email], # type: ignore
             body=f"Your OTP is {otp}",
-            subtype="plain"
+            subtype="plain" # type: ignore
         )
 
         fm = FastMail(conf)
@@ -73,6 +98,7 @@ async def send_otp(data: EmailRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 # ================= VERIFY OTP =================
+
 @app.post("/verify-otp")
 async def verify_otp(data: VerifyOtpRequest):
     try:
@@ -89,7 +115,7 @@ async def verify_otp(data: VerifyOtpRequest):
 
         token = jwt.encode(
             {"sub": data.email, "exp": datetime.now(timezone.utc) + timedelta(days=1)},
-            JWT_SECRET, 
+            JWT_SECRET,  # type: ignore
             algorithm=ALGORITHM
         )
 
