@@ -1,5 +1,4 @@
 import OtpField from "@/components/OtpField";
-import axios from "axios";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -15,6 +14,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
+import api from "@/utils/api";
+import { Ionicons } from "@expo/vector-icons";
+
 const YELLOW = "#F5C518";
 const ORANGE = "#F0A500";
 const WHITE = "#FFFFFF";
@@ -25,25 +27,29 @@ export default function SignupScreen() {
   const [email, setEmail] = useState("");
   const [step, setStep] = useState(false);
   const [otp, setOtp] = useState("");
+  const [error, setError] = useState("");
+
+  const handleBack = () => {
+    setStep(false);
+    setOtp("");
+    setError("");
+  };
 
   const handleSignup = async () => {
     try {
       if (!step) {
         // Step 1: Send OTP
-        await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/send-otp`, {
+        await api.post("/send-otp", {
           email,
         });
 
         setStep(true);
       } else {
         // Step 2: Verify OTP
-        const res = await axios.post(
-          `${process.env.EXPO_PUBLIC_API_URL}/verify-otp`,
-          {
-            email,
-            otp,
-          },
-        );
+        const res = await api.post("/verify-otp", {
+          email,
+          otp,
+        });
 
         const token = res.data.access_token;
 
@@ -57,7 +63,8 @@ export default function SignupScreen() {
         if (token) router.push("/(tabs)");
       }
     } catch (err: any) {
-      console.log(err.response?.data || err.message);
+      console.log(err.message);
+      setError(err.response?.data?.detail);
     }
   };
 
@@ -78,7 +85,15 @@ export default function SignupScreen() {
             {/* ── Yellow Top Section ── */}
             <View style={styles.topSection}>
               <View style={styles.orangeBlob} />
-
+              {step && (
+                <TouchableOpacity
+                  style={styles.backBtn}
+                  activeOpacity={0.8}
+                  onPress={handleBack}
+                >
+                  <Ionicons name="arrow-back" size={25} color={"black"} />
+                </TouchableOpacity>
+              )}
               <View style={styles.logoContainer}>
                 <View style={styles.smileOuter}>
                   <View style={styles.smileInner} />
@@ -122,7 +137,11 @@ export default function SignupScreen() {
               >
                 <Text style={styles.signupBtnText}>Sign up</Text>
               </TouchableOpacity>
-
+              {error && (
+                <View style={styles.error}>
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              )}
               {/* Footer links */}
               <View style={styles.footer}>
                 <TouchableOpacity activeOpacity={0.7}>
@@ -166,6 +185,23 @@ const styles = StyleSheet.create({
     backgroundColor: ORANGE,
     top: 40,
     right: "20%",
+  },
+  backBtn: {
+    position: "absolute",
+    top: 20,
+    left: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    backgroundColor: "white",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#afafaf",
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 5,
+    zIndex: 10,
   },
   logoContainer: {
     alignItems: "center",
@@ -213,6 +249,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     marginTop: -28,
   },
+
   title: {
     fontSize: 26,
     fontWeight: "700",
@@ -274,7 +311,14 @@ const styles = StyleSheet.create({
     color: WHITE,
     letterSpacing: 0.5,
   },
-
+  error: {
+    flex: 1,
+    alignItems: "center",
+  },
+  errorText: {
+    fontSize: 16,
+    color: "red",
+  },
   /* ── Footer ── */
   footer: {
     marginTop: "auto",
