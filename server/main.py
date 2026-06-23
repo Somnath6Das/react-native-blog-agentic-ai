@@ -127,7 +127,10 @@ async def verify_otp(data: VerifyOtpRequest, db: Session = Depends(get_db)):
             db.add(new_user)
             db.commit()
             db.refresh(new_user)
-        
+            user_id = new_user.id
+        else:
+            user_id = existing_user.id 
+
         token = jwt.encode(
             {"sub": data.email, "exp": datetime.now(timezone.utc) + timedelta(days=1)},
             JWT_SECRET,  # type: ignore
@@ -136,7 +139,13 @@ async def verify_otp(data: VerifyOtpRequest, db: Session = Depends(get_db)):
 
         del otp_store[data.email]
         # print(token)
-        return {"access_token": token, "token_type": "bearer", "email": data.email}
+
+        user = {
+            "email": data.email,
+            "id": user_id
+        }
+
+        return {"access_token": token, "token_type": "bearer", "user": user}
     
     except HTTPException:
         raise

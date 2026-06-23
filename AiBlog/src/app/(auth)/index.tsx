@@ -51,16 +51,16 @@ export default function SignupScreen() {
           otp,
         });
 
-        const token = res.data.access_token;
+        const { access_token, user } = res.data;
 
-        const user_email = res.data.email;
-        console.log(user_email);
+        console.log(user.id); // 1
+        console.log(user.email);
 
         // console.log("JWT:", token);
         // Save token securely
-        await SecureStore.setItemAsync("token", token);
+        await SecureStore.setItemAsync("token", access_token);
         // navigate to tabs
-        if (token) router.push("/(tabs)");
+        if (access_token) router.push("/(tabs)");
       }
     } catch (err: any) {
       console.log(err.message);
