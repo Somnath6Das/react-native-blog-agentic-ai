@@ -9,10 +9,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import { router } from "expo-router";
-import useAuthStore from "@/utils/auth_store";
+import useAuthStore from "@/store/auth_store";
 
 // Replace with your actual image source
-const AVATAR_URI = "https://randomuser.me/api/portraits/men/32.jpg";
+const AVATAR_URI = "https://cdn-icons-png.flaticon.com/512/3177/3177440.png";
 
 const WHITE = "#FFFFFF";
 const TEXT_DARK = "#1A1A1A";
@@ -25,9 +25,12 @@ const HEADER_HEIGHT = 140; // fixed header height
 const AVATAR_OVERLAP = AVATAR_SIZE / 1.5; // how much avatar hangs below header
 
 export default function ProfileScreen() {
-  const { user } = useAuthStore();
+  const { user, clearAuth } = useAuthStore();
+
   const handleSignout = async () => {
     await SecureStore.deleteItemAsync("token");
+    clearAuth();
+    console.log("Clear Auth from store");
     router.push("/(auth)");
   };
 
@@ -69,7 +72,10 @@ export default function ProfileScreen() {
 
         {/* ── Avatar — rendered LAST so it's on top of everything ── */}
         <View style={styles.avatarWrapper}>
-          <Image source={{ uri: AVATAR_URI }} style={styles.avatar} />
+          <Image
+            source={{ uri: user?.avatar_url || AVATAR_URI }}
+            style={styles.avatar}
+          />
         </View>
         <TouchableOpacity
           style={styles.signoutBtn}
@@ -227,7 +233,7 @@ const styles = StyleSheet.create({
   },
 
   signoutBtn: {
-    backgroundColor: "#9fa5a1",
+    backgroundColor: "#c6c6c6",
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: "center",

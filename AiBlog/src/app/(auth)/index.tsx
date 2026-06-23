@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import api from "@/utils/api";
 import { Ionicons } from "@expo/vector-icons";
-import useAuthStore from "@/utils/auth_store";
+import useAuthStore from "@/store/auth_store";
 
 const YELLOW = "#F5C518";
 const ORANGE = "#F0A500";
