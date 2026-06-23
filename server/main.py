@@ -10,12 +10,16 @@ import uvicorn
 from datetime import datetime, timedelta, timezone
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
+import src.database.user.models as models, src.database.user.schemas as schemas
+from src.database.database import engine, get_db
+from src.database.user.models import User
 from sqlalchemy.orm import Session
 from typing import List
-import models, schemas
-from database import engine, get_db
 
 load_dotenv() 
+
+# Create tables on startup
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -103,7 +107,7 @@ async def send_otp(data: EmailRequest):
 # ================= VERIFY OTP =================
 
 @app.post("/verify-otp")
-async def verify_otp(data: VerifyOtpRequest):
+async def verify_otp(data: VerifyOtpRequest, db: Session = Depends(get_db)):
     try:
         record = otp_store.get(data.email)
 
@@ -115,7 +119,15 @@ async def verify_otp(data: VerifyOtpRequest):
 
         if record["otp"] != data.otp:
             raise HTTPException(status_code=400, detail="Invalid OTP")
-
+        
+        # Create user in DB if not already exists
+        existing_user = db.query(User).filter(User.email == data.email).first()
+        if not existing_user:
+            new_user = User(email=data.email)
+            db.add(new_user)
+            db.commit()
+            db.refresh(new_user)
+        
         token = jwt.encode(
             {"sub": data.email, "exp": datetime.now(timezone.utc) + timedelta(days=1)},
             JWT_SECRET,  # type: ignore
