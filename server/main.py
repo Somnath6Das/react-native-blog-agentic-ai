@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
 import random
 from datetime import datetime, timedelta
@@ -10,7 +10,10 @@ import uvicorn
 from datetime import datetime, timedelta, timezone
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
-from fastapi import Depends
+from sqlalchemy.orm import Session
+from typing import List
+import models, schemas
+from database import engine, get_db
 
 load_dotenv() 
 
