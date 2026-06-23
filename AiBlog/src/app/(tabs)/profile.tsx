@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import { router } from "expo-router";
+import useAuthStore from "@/utils/auth_store";
 
 // Replace with your actual image source
 const AVATAR_URI = "https://randomuser.me/api/portraits/men/32.jpg";
@@ -24,6 +25,7 @@ const HEADER_HEIGHT = 140; // fixed header height
 const AVATAR_OVERLAP = AVATAR_SIZE / 1.5; // how much avatar hangs below header
 
 export default function ProfileScreen() {
+  const { user } = useAuthStore();
   const handleSignout = async () => {
     await SecureStore.deleteItemAsync("token");
     router.push("/(auth)");
@@ -44,7 +46,7 @@ export default function ProfileScreen() {
           {/* spacer so content sits below avatar */}
           <View style={styles.avatarSpacer} />
           <Text style={styles.name}>Lucas Bennett</Text>
-          <Text style={styles.email}>lucasbennett@gmail.com</Text>
+          <Text style={styles.email}>{user?.email}</Text>
 
           <View style={styles.statsRow}>
             <View style={styles.statCard}>

@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import api from "@/utils/api";
 import { Ionicons } from "@expo/vector-icons";
+import useAuthStore from "@/utils/auth_store";
 
 const YELLOW = "#F5C518";
 const ORANGE = "#F0A500";
@@ -24,6 +25,7 @@ const TEXT_DARK = "#1A1A1A";
 const TEXT_MUTED = "#AAAAAA";
 
 export default function SignupScreen() {
+  const { setAuth } = useAuthStore();
   const [email, setEmail] = useState("");
   const [step, setStep] = useState(false);
   const [otp, setOtp] = useState("");
@@ -53,8 +55,11 @@ export default function SignupScreen() {
 
         const { access_token, user } = res.data;
 
-        console.log(user.id); // 1
-        console.log(user.email);
+        // save user to zustand store
+        setAuth(user);
+
+        // console.log(user.id); // 1
+        // console.log(user.email);
 
         // console.log("JWT:", token);
         // Save token securely
