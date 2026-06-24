@@ -1,20 +1,11 @@
-from fastapi import FastAPI, HTTPException, Depends
-from pydantic import BaseModel, EmailStr
-import random
-from datetime import datetime, timedelta
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
-from jose import jwt
-import os
+from fastapi import FastAPI
 from dotenv import load_dotenv
 import uvicorn
-from datetime import datetime, timedelta, timezone
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import jwt, JWTError
-import src.database.user.models as models, src.database.user.schemas as schemas
-from src.database.database import engine, get_db
-from src.database.user.models import User
-from sqlalchemy.orm import Session
-from typing import List
+import src.database.user.models as models
+from src.database.database import engine
+from src.routes import auth, profile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 load_dotenv() 
 
@@ -22,136 +13,23 @@ load_dotenv()
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+app.include_router(auth.router)
 
-
-
-
-# ================= CONFIG =================
-JWT_SECRET = os.getenv("JWT_SECRET")  # better rename this
-ALGORITHM = "HS256"
-
-conf = ConnectionConfig(
-    MAIL_USERNAME=os.getenv("SENDER_MAIL"), # type: ignore
-    MAIL_PASSWORD=os.getenv("APP_PASSWORD"),  # Gmail App Password # type: ignore
-    MAIL_FROM=os.getenv("SENDER_MAIL"), # type: ignore
-    MAIL_PORT=587,
-    MAIL_SERVER="smtp.gmail.com",
-    MAIL_STARTTLS=True,
-    MAIL_SSL_TLS=False,
-    USE_CREDENTIALS=True
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-otp_store = {}
-
-# ================= MODELS =================
-class EmailRequest(BaseModel):
-    email: EmailStr
-
-class VerifyOtpRequest(BaseModel):
-    email: EmailStr
-    otp: str
-
+# Serves files saved in UPLOAD_DIR at http://<host>/uploads/<filename>
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+app.include_router(profile.router)
 
 @app.get("/")
 def read_root():
     return {"message": "Server running"}
 
-
-# ================= Get Token =================
-
-security = HTTPBearer()
-
-def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM]) # type: ignore
-        return payload
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-
-@app.get("/me")
-def get_me(user=Depends(verify_token)):
-    return {"email": user["sub"]}
-
-
-# ================= SEND OTP =================
-
-@app.post("/send-otp")
-async def send_otp(data: EmailRequest):
-    try:
-        otp = str(random.randint(100000, 999999))
-        print(otp)
-        otp_store[data.email] = {
-            "otp": otp,
-            "expires": datetime.now(timezone.utc) + timedelta(minutes=5)
-        }
-
-        message = MessageSchema(
-            subject="Your OTP Code",
-            recipients=[data.email], # type: ignore
-            body=f"Your OTP is {otp}",
-            subtype="plain" # type: ignore
-        )
-
-        fm = FastMail(conf)
-        await fm.send_message(message)
-
-        return {"message": "OTP sent successfully"}
-
-    except Exception as e:
-        print("EMAIL ERROR:", e)
-        raise HTTPException(status_code=500, detail=str(e))
-
-# ================= VERIFY OTP =================
-
-@app.post("/verify-otp")
-async def verify_otp(data: VerifyOtpRequest, db: Session = Depends(get_db)):
-    try:
-        record = otp_store.get(data.email)
-
-        if not record:
-            raise HTTPException(status_code=400, detail="OTP not found")
-
-        if record["expires"] < datetime.now(timezone.utc):
-            raise HTTPException(status_code=400, detail="OTP expired")
-
-        if record["otp"] != data.otp:
-            raise HTTPException(status_code=400, detail="Invalid OTP")
-        
-        # Create user in DB if not already exists
-        existing_user = db.query(User).filter(User.email == data.email).first()
-        if not existing_user:
-            new_user = User(email=data.email)
-            db.add(new_user)
-            db.commit()
-            db.refresh(new_user)
-            user_id = new_user.id
-        else:
-            user_id = existing_user.id 
-
-        token = jwt.encode(
-            {"sub": data.email, "exp": datetime.now(timezone.utc) + timedelta(days=1)},
-            JWT_SECRET,  # type: ignore
-            algorithm=ALGORITHM
-        )
-
-        del otp_store[data.email]
-        # print(token)
-
-        user = {
-            "email": data.email,
-            "id": user_id
-        }
-
-        return {"access_token": token, "token_type": "bearer", "user": user}
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        print("VERIFY ERROR:", e)
-        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
