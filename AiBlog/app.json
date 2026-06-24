@@ -34,6 +34,13 @@
             "imageWidth": 76
           }
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow access to your photos to set a profile picture.",
+          "cameraPermission": "Allow access to your camera to take a profile photo."
+        }
       ]
     ],
     "experiments": {

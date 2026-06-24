@@ -41,14 +41,14 @@ export default function SignupScreen() {
     try {
       if (!step) {
         // Step 1: Send OTP
-        await api.post("/send-otp", {
+        await api.post("/auth/send-otp", {
           email,
         });
 
         setStep(true);
       } else {
         // Step 2: Verify OTP
-        const res = await api.post("/verify-otp", {
+        const res = await api.post("/auth/verify-otp", {
           email,
           otp,
         });

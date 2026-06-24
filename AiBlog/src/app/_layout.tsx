@@ -1,10 +1,11 @@
 import { router, Stack } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "@/utils/api";
 
 const RootLayout = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const isMounted = useRef(false);
 
   const checkAuth = async () => {
     const token = await SecureStore.getItemAsync("token");
@@ -15,7 +16,7 @@ const RootLayout = () => {
     }
 
     try {
-      await api.get("/me", {
+      await api.get("/auth/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setIsAuthenticated(true);
@@ -26,11 +27,15 @@ const RootLayout = () => {
     }
   };
   useEffect(() => {
+    isMounted.current = true;
     const run = async () => {
       await checkAuth(); // wait for it to finish
       // navigation is now handled by the state change re-triggering this effect
     };
     run();
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
   useEffect(() => {
