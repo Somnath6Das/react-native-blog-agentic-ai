@@ -1,8 +1,9 @@
 import os
+from typing import Optional
 import uuid
 
 import aiofiles
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi import APIRouter
@@ -22,8 +23,10 @@ router = APIRouter(prefix="/profile", tags=["profile"])
 
 
 
+
 @router.post("/upload")
-async def upload_photo(file: UploadFile = File(...)):
+async def upload_photo(file: UploadFile = File(...),
+                       old_avatar_url: Optional[str] = Form(None),):
     if file.content_type not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(status_code=400, detail="Unsupported file type")
 
@@ -50,5 +53,11 @@ async def upload_photo(file: UploadFile = File(...)):
         if os.path.exists(filepath):
             os.remove(filepath)
         raise HTTPException(status_code=500, detail="Failed to save file")
+    
+   # delete old avatar if exists
+    if old_avatar_url:
+        old_path = os.path.join("uploads", str(old_avatar_url))
+        if os.path.isfile(old_path):
+            os.remove(old_path)
 
     return {"url": f"{BASE_URL}/uploads/{filename}"}

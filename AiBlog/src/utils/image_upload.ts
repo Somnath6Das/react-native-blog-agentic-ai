@@ -2,6 +2,8 @@ import useAuthStore from "@/store/auth_store";
 import api from "./api";
 
 export const handleResult = async (uri: string) => {
+  const user = useAuthStore.getState().user;
+
   const filename = uri.split("/").pop() ?? `photo_${Date.now()}.jpg`;
   const ext = /\.(\w+)$/.exec(filename)?.[1]?.toLowerCase() ?? "jpg";
   const mimeType = ext === "png" ? "image/png" : "image/jpeg";
@@ -14,9 +16,15 @@ export const handleResult = async (uri: string) => {
     type: mimeType,
   } as any);
 
+  if (user?.avatar_url) {
+    const filename = user.avatar_url.split("/").pop() ?? "";
+    formData.append("old_avatar_url", filename);
+  }
+
   const response = await api.post<{ url: string }>(
     "/profile/upload",
     formData,
+
     {
       headers: {
         // RN's networking layer fills in the multipart boundary itself —
