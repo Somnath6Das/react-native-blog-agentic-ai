@@ -18,7 +18,7 @@ export const handleResult = async (uri: string) => {
 
   if (user?.avatar_url) {
     const filename = user.avatar_url.split("/").pop() ?? "";
-    formData.append("old_avatar_url", filename);
+    formData.append("old_avatar_filename", filename);
   }
 
   const response = await api.post<{ url: string }>(

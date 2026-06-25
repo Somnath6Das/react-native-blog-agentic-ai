@@ -26,7 +26,7 @@ router = APIRouter(prefix="/profile", tags=["profile"])
 
 @router.post("/upload")
 async def upload_photo(file: UploadFile = File(...),
-                       old_avatar_url: Optional[str] = Form(None),):
+                       old_avatar_filename: Optional[str] = Form(None),):
     if file.content_type not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(status_code=400, detail="Unsupported file type")
 
@@ -55,8 +55,8 @@ async def upload_photo(file: UploadFile = File(...),
         raise HTTPException(status_code=500, detail="Failed to save file")
     
    # delete old avatar if exists
-    if old_avatar_url:
-        old_path = os.path.join("uploads", str(old_avatar_url))
+    if old_avatar_filename:
+        old_path = os.path.join("uploads", str(old_avatar_filename))
         if os.path.isfile(old_path):
             os.remove(old_path)
 
