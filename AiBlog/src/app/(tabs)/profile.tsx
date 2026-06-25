@@ -157,7 +157,9 @@ export default function ProfileScreen() {
         <View style={styles.avatarWrapper}>
           <TouchableOpacity onPress={() => setOpenImageModal(true)}>
             <Image
-              source={{ uri: image || user?.avatar_url || AVATAR_URI }}
+              source={{
+                uri: image || user?.avatar_url || AVATAR_URI,
+              }}
               style={styles.avatar}
             />
           </TouchableOpacity>

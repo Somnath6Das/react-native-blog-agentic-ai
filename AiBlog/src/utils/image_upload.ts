@@ -3,6 +3,7 @@ import api from "./api";
 
 export const handleResult = async (uri: string) => {
   const user = useAuthStore.getState().user;
+  // console.log(user);
 
   const filename = uri.split("/").pop() ?? `photo_${Date.now()}.jpg`;
   const ext = /\.(\w+)$/.exec(filename)?.[1]?.toLowerCase() ?? "jpg";
@@ -15,13 +16,8 @@ export const handleResult = async (uri: string) => {
     name: filename,
     type: mimeType,
   } as any);
-
-  if (user?.avatar_url) {
-    const filename = user.avatar_url.split("/").pop() ?? "";
-    formData.append("old_avatar_filename", filename);
-  }
-
-  const response = await api.post<{ url: string }>(
+  formData.append("user", JSON.stringify(user));
+  const response = await api.patch<{ url: string }>(
     "/profile/upload",
     formData,
 
@@ -34,6 +30,7 @@ export const handleResult = async (uri: string) => {
       },
     },
   );
+
   useAuthStore
     .getState()
     .updateAvatar(`${process.env.EXPO_PUBLIC_API_URL}${response.data.url}`);
