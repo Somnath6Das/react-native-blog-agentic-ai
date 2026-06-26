@@ -13,11 +13,11 @@ import {
 
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FeaturedCarousel from "../../components/FeaturedCard";
-import PostCard from "../../components/PostCard";
-import { COLORS, FONTS, SPACING } from "../../constants/theme";
-import type { Post } from "../../data/posts";
-import { POSTS } from "../../data/posts";
+import FeaturedCarousel from "@/components/FeaturedCard";
+import PostCard from "@/components/PostCard";
+import { COLORS, FONTS, SPACING } from "@/constants/theme";
+import type { Post } from "@/data/posts";
+import { POSTS } from "@/data/posts";
 
 const popular = POSTS.filter((p) => !p.featured);
 

@@ -16,7 +16,7 @@ import {
 export default function ProfileName() {
   const user = useAuthStore.getState().user;
   const [modalVisible, setModalVisible] = useState(false);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(user?.name);
   const [savedName, setSavedName] = useState("");
 
   const handleDone = async () => {

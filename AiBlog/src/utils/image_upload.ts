@@ -17,22 +17,14 @@ export const handleResult = async (uri: string) => {
     type: mimeType,
   } as any);
   formData.append("user", JSON.stringify(user));
-  const response = await api.patch<{ url: string }>(
+  await api.patch<{ url: string }>(
     "/profile/upload",
     formData,
 
     {
       headers: {
-        // RN's networking layer fills in the multipart boundary itself —
-        // this just tells it (and overrides any 'application/json' default
-        // your axios instance might set) that this request is multipart.
         "Content-Type": "multipart/form-data",
       },
     },
   );
-
-  useAuthStore
-    .getState()
-    .updateAvatar(`${process.env.EXPO_PUBLIC_API_URL}${response.data.url}`);
-  // console.log(`${process.env.EXPO_PUBLIC_API_URL}${response.data.url}`);
 };

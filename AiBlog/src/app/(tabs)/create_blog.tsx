@@ -1,6 +1,7 @@
-import { COLORS } from "@/constants/theme";
+import { COLORS, FONTS } from "@/constants/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRef, useState } from "react";
+
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -108,12 +109,11 @@ export default function ChatScreen() {
 
       {/* ── Header ─────────────────────────────────────────────────── */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={{ marginLeft: 10 }}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Ionicons name="menu" size={26} color={COLORS.black} />
-        </TouchableOpacity>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity>
+            <Ionicons name="menu" size={26} color={COLORS.black} />
+          </TouchableOpacity>
+        </View>
         <Text style={styles.headerTitle}>Write Your Blog Topic</Text>
       </View>
 
@@ -179,21 +179,24 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
+    flexDirection: "row",
     height: 52,
     backgroundColor: "#FFFFFF",
-    alignItems: "flex-start",
-    justifyContent: "center",
+    alignItems: "center", // center vertically
+    justifyContent: "center", // center children (title)
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#E5E5E5",
   },
-  headerTitle: {
-    alignSelf: "center",
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#1A1A1A",
-    letterSpacing: -0.2,
+  headerLeft: {
+    position: "absolute",
+    left: 8, // icon pinned to left with 8px margin
   },
-
+  headerTitle: {
+    color: COLORS.primary,
+    ...FONTS.displayMD,
+    letterSpacing: -0.2,
+    // no alignSelf needed — parent's justifyContent centers it
+  },
   // List
   listContent: {
     paddingHorizontal: 16,
