@@ -22,6 +22,7 @@ import {
   Ionicons,
   SimpleLineIcons,
 } from "@expo/vector-icons";
+import ProfileName from "@/components/ProfileName";
 
 // Replace with your actual image source
 const AVATAR_URI = "https://cdn-icons-png.flaticon.com/512/3177/3177440.png";
@@ -131,9 +132,8 @@ export default function ProfileScreen() {
         <View style={styles.card}>
           {/* spacer so content sits below avatar */}
           <View style={styles.avatarSpacer} />
-          <Text style={styles.name}>Lucas Bennett</Text>
+          <ProfileName />
           <Text style={styles.email}>{user?.email}</Text>
-
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
               <View style={styles.statIconCircle}>
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   email: {
-    fontSize: 13,
+    fontSize: 15,
     color: TEXT_MUTED,
     marginTop: 4,
     marginBottom: 28,
