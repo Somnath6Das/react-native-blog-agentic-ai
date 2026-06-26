@@ -128,6 +128,16 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 
+
+
 @router.get("/me")
-def get_me(user=Depends(verify_token)):
-    return {"email": user["sub"]}
+def get_me(user=Depends(verify_token), db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.email == user["sub"]).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "id": str(db_user.id),
+        "name": db_user.name,
+        "email": db_user.email,
+        "avatar_url": db_user.avatar_url,
+    }

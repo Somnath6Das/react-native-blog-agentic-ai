@@ -2,6 +2,7 @@ import { router, Stack } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useRef, useState } from "react";
 import api from "@/utils/api";
+import useAuthStore from "@/store/auth_store";
 
 const RootLayout = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -16,10 +17,16 @@ const RootLayout = () => {
     }
 
     try {
-      await api.get("/auth/me", {
+      const { data } = await api.get("/auth/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setIsAuthenticated(true);
+      useAuthStore.getState().setAuth({
+        id: data.id,
+        name: data.name || "",
+        email: data.email,
+        avatar_url: data.avatar_url || "",
+      });
     } catch (error: any) {
       // Token is invalid/expired — clear it
       await SecureStore.deleteItemAsync("token");
