@@ -2,6 +2,7 @@ import json
 import os
 from typing import Optional
 import uuid
+from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, Depends, File, Form, HTTPException, UploadFile
 from src.database.user.models import User
 from sqlalchemy.orm import Session
@@ -24,10 +25,7 @@ CHUNK_SIZE = 1024 * 1024  # 1 MB
 # app = FastAPI(title="Photo Upload Service")
 router = APIRouter(prefix="/profile", tags=["profile"])
 
-
-
-
-
+#------- Upload Profile Picture -------
 @router.patch("/upload")
 async def upload_photo(file: UploadFile = File(...),
                         user: Optional[str] = Form(None),db: Session = Depends(get_db)):
@@ -87,3 +85,19 @@ async def upload_photo(file: UploadFile = File(...),
                 # print(f"Deleted old avatar: {old_path}")
 
     return {"url": f"{BASE_URL}/uploads/{filename}"}
+
+
+#------- Update User name ------------
+
+class UserResponse(BaseModel):
+    name: str
+    id: str 
+
+@router.patch("/name")
+async def update_name(body: UserResponse, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.id == body.id).first()
+    if db_user:
+        db_user.name = body.name  # type: ignore
+        db.commit()
+        db.refresh(db_user)
+        return db_user

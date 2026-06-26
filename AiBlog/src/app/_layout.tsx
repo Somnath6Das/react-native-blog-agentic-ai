@@ -30,6 +30,7 @@ const RootLayout = () => {
     } catch (error: any) {
       // Token is invalid/expired — clear it
       await SecureStore.deleteItemAsync("token");
+      useAuthStore.getState().clearAuth();
       setIsAuthenticated(false);
     }
   };

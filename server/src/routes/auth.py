@@ -31,15 +31,11 @@ conf = ConnectionConfig(
 
 otp_store = {}
 
-# ================= MODELS =================
+#----------Send OTP--------------------
 class EmailRequest(BaseModel):
     email: EmailStr
 
-class VerifyOtpRequest(BaseModel):
-    email: EmailStr
-    otp: str
 
-#----------Send OTP--------------------
 @router.post("/send-otp")
 async def send_otp(data: EmailRequest):
     try:
@@ -67,6 +63,11 @@ async def send_otp(data: EmailRequest):
         raise HTTPException(status_code=500, detail=str(e))
     
 #----------Verify OTP--------------------
+
+class VerifyOtpRequest(BaseModel):
+    email: EmailStr
+    otp: str
+
 @router.post("/verify-otp")
 async def verify_otp(data: VerifyOtpRequest, db: Session = Depends(get_db)):
     try:
@@ -115,7 +116,7 @@ async def verify_otp(data: VerifyOtpRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
     
 
-#----------Verify Token-------------------
+#----------Verify Token and Send User Data-------------------
 security = HTTPBearer()
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):

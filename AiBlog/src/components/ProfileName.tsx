@@ -1,3 +1,5 @@
+import useAuthStore from "@/store/auth_store";
+import api from "@/utils/api";
 import React, { useState } from "react";
 import {
   View,
@@ -12,22 +14,30 @@ import {
 } from "react-native";
 
 export default function ProfileName() {
+  const user = useAuthStore.getState().user;
   const [modalVisible, setModalVisible] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [savedName, setSavedName] = useState("");
 
-  const handleDone = () => {
-    setSavedName(inputValue);
-    setModalVisible(false);
+  const handleDone = async () => {
+    try {
+      const response = await api.patch("/profile/name", {
+        id: user?.id,
+        name: inputValue, // ← use inputValue directly
+      });
+      const updatedName = response.data.name;
+      setSavedName(updatedName); // ← update state after success
+      useAuthStore.getState().updateName(updatedName);
+      setModalVisible(false);
+    } catch (error) {
+      console.log(error);
+    }
   };
-
   const handleCancel = () => {
-    setInputValue(savedName); // revert to last saved
     setModalVisible(false);
   };
 
   const handleOpen = () => {
-    setInputValue(savedName); // pre-fill with current name
     setModalVisible(true);
   };
 
@@ -36,7 +46,7 @@ export default function ProfileName() {
       {/* Trigger Button — shows name after user submits */}
       <TouchableOpacity style={styles.triggerButton} onPress={handleOpen}>
         <Text style={styles.triggerButtonText}>
-          {savedName ? savedName : "What is your name?"}
+          {user?.name || savedName || "What is your name?"}
         </Text>
       </TouchableOpacity>
 

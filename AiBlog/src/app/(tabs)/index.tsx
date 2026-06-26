@@ -46,9 +46,6 @@ export default function HomeScreen() {
         entering={FadeInDown.duration(400).delay(50)}
         style={styles.header}
       >
-        <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Ionicons name="menu" size={26} color={COLORS.black} />
-        </TouchableOpacity>
         <Text style={styles.brand}>OUTDOOR</Text>
       </Animated.View>
 

@@ -13,6 +13,7 @@ type AuthStore = {
   user: User | null;
   setAuth: (user: User) => void;
   clearAuth: () => void;
+  updateName: (name: string) => void;
   updateAvatar: (avatar_url: string) => void; // add this
 };
 
@@ -22,6 +23,10 @@ const useAuthStore = create<AuthStore>()(
       user: null,
       setAuth: (user) => set({ user }),
       clearAuth: () => set({ user: null }),
+      updateName: (name) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, name } : null,
+        })),
       updateAvatar: (avatar_url) =>
         set((state) => ({
           user: state.user ? { ...state.user, avatar_url } : null,
