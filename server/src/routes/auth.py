@@ -131,8 +131,8 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
 
 
 @router.get("/me")
-def get_me(user=Depends(verify_token), db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.email == user["sub"]).first()
+def get_me(token=Depends(verify_token), db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.email == token["sub"]).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
     return {
