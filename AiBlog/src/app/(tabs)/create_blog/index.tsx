@@ -1,8 +1,10 @@
 import { COLORS, FONTS } from "@/constants/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
+
 import { useRef, useState } from "react";
 
 import {
+  Button,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -13,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 // ── Types ──────────────────────────────────────────────────────────────────
 type Message = {
@@ -123,7 +126,6 @@ export default function ChatScreen() {
             listRef.current?.scrollToEnd({ animated: true })
           }
         />
-
         {/* ── Input bar ──────────────────────────────────────────────── */}
         <View style={styles.inputBar}>
           <TextInput
