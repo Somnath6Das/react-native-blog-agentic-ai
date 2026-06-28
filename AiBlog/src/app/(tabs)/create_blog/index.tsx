@@ -107,16 +107,6 @@ export default function ChatScreen() {
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* ── Header ─────────────────────────────────────────────────── */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity>
-            <Ionicons name="menu" size={26} color={COLORS.black} />
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.headerTitle}>Write Your Blog Topic</Text>
-      </View>
-
       {/* ── Message list ───────────────────────────────────────────── */}
       <KeyboardAvoidingView
         style={styles.flex}
@@ -177,26 +167,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // Header
-  header: {
-    flexDirection: "row",
-    height: 52,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center", // center vertically
-    justifyContent: "center", // center children (title)
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E5E5",
-  },
-  headerLeft: {
-    position: "absolute",
-    left: 8, // icon pinned to left with 8px margin
-  },
-  headerTitle: {
-    color: COLORS.primary,
-    ...FONTS.displayMD,
-    letterSpacing: -0.2,
-    // no alignSelf needed — parent's justifyContent centers it
-  },
   // List
   listContent: {
     paddingHorizontal: 16,
