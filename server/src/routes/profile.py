@@ -17,7 +17,7 @@ import aiofiles
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000") 
+# BASE_URL = os.environ["BASE_URL"]
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 CHUNK_SIZE = 1024 * 1024  # 1 MB
@@ -60,7 +60,7 @@ async def upload_photo(file: UploadFile = File(...),
     
   
     user_data = json.loads(user) if user else {}
-    avatar_url = f"{BASE_URL}/uploads/{filename}"
+    avatar_url = f"/uploads/{filename}"
 
     # save filepath to neon db
     if user_data:
@@ -84,7 +84,7 @@ async def upload_photo(file: UploadFile = File(...),
                 os.remove(old_path)
                 # print(f"Deleted old avatar: {old_path}")
 
-    return {"url": f"{BASE_URL}/uploads/{filename}"}
+    return {"url": f"/uploads/{filename}"}
 
 
 #------- Update User name ------------

@@ -36,6 +36,7 @@ const ORANGE = "#F0A500";
 const AVATAR_SIZE = 120;
 const HEADER_HEIGHT = 140; // fixed header height
 const AVATAR_OVERLAP = AVATAR_SIZE / 1.5; // how much avatar hangs below header
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
 
 export default function ProfileScreen() {
   const { user, clearAuth } = useAuthStore();
@@ -158,7 +159,11 @@ export default function ProfileScreen() {
           <TouchableOpacity onPress={() => setOpenImageModal(true)}>
             <Image
               source={{
-                uri: image || user?.avatar_url || AVATAR_URI,
+                uri:
+                  image ||
+                  (user?.avatar_url
+                    ? `${BASE_URL}${user.avatar_url}`
+                    : AVATAR_URI),
               }}
               style={styles.avatar}
             />
