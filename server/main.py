@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import uvicorn
 import src.database.user.models as models
 from src.database.database import engine
-from src.routes import auth, profile
+from src.routes import auth, profile, blogs
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -14,7 +14,7 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 app.include_router(auth.router)
-
+app.include_router(blogs.router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
