@@ -1,20 +1,92 @@
-from fastapi import APIRouter, HTTPException, Depends, File, Form, HTTPException
-from sqlalchemy.orm import Session
+from __future__ import annotations
+ 
+import re
+import uuid
+import asyncio
+from pathlib import Path
+ 
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from src.database.database import engine, get_db
-
+ 
+# Import the compiled LangGraph app + Plan model from your pipeline module.
+# Adjust this import path to wherever you move the notebook code (e.g. app/pipeline/graph.py)
+from ..pipeline.graph import  app as graph_app # the compiled `app = g.compile()` from the notebook
 
 router = APIRouter(prefix="/blogs", tags=["blogs"])
 
-
-# -- create blog  ----
-
-class UserResponse(BaseModel):
+# Directory where generated markdown files are stored.
+# This is relative to wherever the server is started from — make it absolute
+# if you want it independent of CWD.
+BLOG_FILES_DIR = Path("blog_files")
+BLOG_FILES_DIR.mkdir(parents=True, exist_ok=True)
+ 
+ 
+class BlogRequest(BaseModel):
     topic: str
-    
+ 
+ 
+class BlogResponse(BaseModel):
+    title: str
+    path: str  # e.g. "blog_files/fine-tuning-in-2026-ab12cd.md"
+ 
+ 
+def slugify(text: str, max_len: int = 60) -> str:
+    """Turn a blog title into a filesystem-safe slug."""
+    text = text.lower().strip()
+    text = re.sub(r"[^a-z0-9\s-]", "", text)
+    text = re.sub(r"[\s_-]+", "-", text).strip("-")
+    if not text:
+        text = "blog-post"
+    return text[:max_len].rstrip("-")
+ 
+ 
+def generate_filename(blog_title: str) -> str:
+    """Generate a unique, safe filename for the markdown file (no directory)."""
+    slug = slugify(blog_title)
+    suffix = uuid.uuid4().hex[:8]
+    return f"{slug}-{suffix}.md"
+ 
 
-@router.post("/create")
-async def create_blog(body: UserResponse):
-     blog = body.topic
-     print(blog)
-     return blog
+
+@router.post("/create", response_model=BlogResponse)
+async def create_blog(body: BlogRequest):
+    if not body.topic or not body.topic.strip():
+        raise HTTPException(status_code=422, detail="topic must not be empty.")
+ 
+    initial_state = {
+        "topic": body.topic.strip(),
+        "mode": "",
+        "needs_research": False,
+        "queries": [],
+        "evidence": [],
+        "plan": None,
+        "sections": [],
+        "final": "",
+    }
+ 
+    try:
+        # app.invoke(...) is sync/blocking (LLM + Tavily calls), so run it in a
+        # worker thread instead of blocking FastAPI's event loop.
+        result = await asyncio.to_thread(graph_app.invoke, initial_state) # type: ignore
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Blog generation failed: {exc}") from exc
+ 
+    plan = result.get("plan") # type: ignore
+    final_md = result.get("final") # type: ignore
+ 
+    if plan is None or not final_md:
+        raise HTTPException(status_code=500, detail="Pipeline did not produce a final blog post.")
+ 
+    blog_title = plan.blog_title
+    filename = generate_filename(blog_title)
+    file_path = BLOG_FILES_DIR / filename
+ 
+    # Write here instead of inside reducer_node, so the route fully controls
+    # naming/location (avoids collisions + unsafe characters from raw titles).
+    file_path.write_text(final_md, encoding="utf-8")
+ 
+    return BlogResponse(
+        title=blog_title,
+        path=str(file_path).replace("\\", "/"),  # normalize for Windows too
+    )
+ 
