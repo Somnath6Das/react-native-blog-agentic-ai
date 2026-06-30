@@ -56,7 +56,12 @@ export default function SignupScreen() {
         const { access_token, user } = res.data;
 
         // save user to zustand store
-        setAuth(user);
+        useAuthStore.getState().setAuth({
+          id: user.id,
+          name: user.name || "",
+          email: user.email,
+          avatar_url: user.avatar_url || "",
+        });
 
         // console.log(user.id); // 1
         // console.log(user.email);
@@ -69,7 +74,16 @@ export default function SignupScreen() {
       }
     } catch (err: any) {
       console.log(err.message);
-      setError(err.response?.data?.detail);
+      const detail = err.response?.data?.detail;
+
+      if (Array.isArray(detail)) {
+        // Pydantic validation error array
+        setError(detail.map((d: any) => d.msg).join(", "));
+      } else if (typeof detail === "string") {
+        setError(detail);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     }
   };
 

@@ -67,6 +67,8 @@ async def send_otp(data: EmailRequest):
 class VerifyOtpRequest(BaseModel):
     email: EmailStr
     otp: str
+    name: str | None = None
+    avatar_url: str | None = None
 
 @router.post("/verify-otp")
 async def verify_otp(data: VerifyOtpRequest, db: Session = Depends(get_db)):
@@ -103,8 +105,10 @@ async def verify_otp(data: VerifyOtpRequest, db: Session = Depends(get_db)):
         # print(token)
 
         user = {
-            "email": data.email,
-            "id": user_id
+        "email": data.email,
+        "id": user_id,
+        "name": existing_user.name if existing_user else None,
+        "avatar_url": existing_user.avatar_url if existing_user else None,
         }
 
         return {"access_token": token, "token_type": "bearer", "user": user}
