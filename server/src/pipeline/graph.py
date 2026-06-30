@@ -91,7 +91,7 @@ class State(TypedDict):
 # -----------------------------
 # 2) LLM
 # -----------------------------
-llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=os.environ.get("GROQ_API_KEY"))
+llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=os.environ.get("GROQ_API_KEY")) # type: ignore
 
 # Alternative providers (swap the assignment above if needed):
 # llm = ChatNVIDIA(model="meta/llama-3.3-70b-instruct", api_key=os.environ.get("NVIDIA_API_KEY"))
@@ -131,9 +131,9 @@ def router_node(state: State) -> dict:
     )
 
     return {
-        "needs_research": decision.needs_research,
-        "mode": decision.mode,
-        "queries": decision.queries,
+        "needs_research": decision.needs_research, # type: ignore
+        "mode": decision.mode, # type: ignore
+        "queries": decision.queries, # type: ignore
     }
 
 
@@ -270,7 +270,7 @@ def research_node(state: State) -> dict:
         return {"evidence": []}
 
     dedup: dict = {}
-    for e in pack.evidence:
+    for e in pack.evidence: # type: ignore
         if e.url:
             dedup[e.url] = e
     return {"evidence": list(dedup.values())[:MAX_EVIDENCE_ITEMS]}
@@ -446,7 +446,7 @@ def worker_node(payload: dict) -> dict:
                 )
             ),
         ]
-    ).content.strip()
+    ).content.strip() # type: ignore
 
     return {"sections": [(task.id, section_md)]}
 
@@ -459,7 +459,7 @@ def reducer_node(state: State) -> dict:
 
     ordered_sections = [md for _, md in sorted(state["sections"], key=lambda x: x[0])]
     body = "\n\n".join(ordered_sections).strip()
-    final_md = f"# {plan.blog_title}\n\n{body}\n"
+    final_md = f"# {plan.blog_title}\n\n{body}\n" # type: ignore
 
     # NOTE: file writing is intentionally NOT done here. The FastAPI route
     # (blogs.py) owns filename generation (slug + uuid) and the blog_files/
