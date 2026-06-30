@@ -75,8 +75,8 @@ async def create_blog(body: BlogRequest):
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Blog generation failed: {exc}") from exc
 
-    plan = result.get("plan")
-    final_md = result.get("final")
+    plan = result.get("plan") # type: ignore
+    final_md = result.get("final") # type: ignore
 
     if plan is None or not final_md:
         raise HTTPException(status_code=500, detail="Pipeline did not produce a final blog post.")
