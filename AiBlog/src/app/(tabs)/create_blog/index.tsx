@@ -1,291 +1,323 @@
-import { COLORS, FONTS } from "@/constants/theme";
-import Ionicons from "@expo/vector-icons/Ionicons";
-
-import { useRef, useState } from "react";
-
+import React, { useState, useRef } from "react";
 import {
-  Button,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  StatusBar,
-  StyleSheet,
+  View,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  FlatList,
+  Image,
+  ActivityIndicator,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-
 import { SafeAreaView } from "react-native-safe-area-context";
-// ── Types ──────────────────────────────────────────────────────────────────
-type Message = {
-  id: string;
-  role: "user" | "assistant";
-  text: string;
+import { Ionicons } from "@expo/vector-icons";
+import Markdown from "@ronradtke/react-native-markdown-display";
+import api from "@/utils/api"; // shared axios instance (AiBlog/src/utils/api.ts)
+
+type UserMessage = { type: "user"; topic: string };
+type AssistantMessage = {
+  type: "assistant";
+  markdown: string;
+  images: string[];
+  path?: string;
 };
+type Message = UserMessage | AssistantMessage;
 
-// ── Seed data matching the screenshot ─────────────────────────────────────
-const INITIAL_MESSAGES: Message[] = [
-  { id: "1", role: "user", text: "What is Pancasila?" },
-  {
-    id: "2",
-    role: "assistant",
-    text: "Pancasila is the official philosophical foundation of the Indonesian state. It consists of five principles: (1) belief in one God, (2) just and civilized humanity, (3) the unity of Indonesia, (4) democracy guided by the inner wisdom in the unanimity arising out of deliberations among representatives, and (5) social justice for all Indonesians.",
-  },
-];
+/**
+ * Each entry in `messages` is either:
+ *  { type: "user", topic: string }
+ *  { type: "assistant", markdown: string, images: string[], path?: string }
+ */
 
-// ── Avatar: GPT circle ─────────────────────────────────────────────────────
-const GPTAvatar = () => (
-  <View style={styles.gptAvatar}>
-    {/* Simple "G" mark as a stand-in for the OpenAI logo */}
-    <Text style={styles.gptAvatarText}>✦</Text>
-  </View>
-);
+export default function CreateBlogScreen() {
+  const [topic, setTopic] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [confirmed, setConfirmed] = useState(false); // hides the input once a topic is sent
+  const listRef = useRef<FlatList<Message> | null>(null);
 
-// ── Avatar: User initial ───────────────────────────────────────────────────
-const UserAvatar = () => (
-  <View style={styles.userAvatar}>
-    <Text style={styles.userAvatarText}>U</Text>
-  </View>
-);
+  const handleSend = async () => {
+    const trimmed = topic.trim();
+    if (!trimmed || loading) return;
 
-// ── Single message bubble ──────────────────────────────────────────────────
-const MessageBubble = ({ message }: { message: Message }) => {
-  const isUser = message.role === "user";
+    setMessages((prev) => [...prev, { type: "user", topic: trimmed }]);
+    setTopic("");
+    setConfirmed(true);
+    setLoading(true);
 
-  if (isUser) {
+    try {
+      // 1) Kick off blog generation.
+      // 90s timeout only on this call — blog gen (LLM + research + images) is slow.
+      // Other api calls across the app are unaffected.
+      const { data } = await api.post(
+        "/blogs/create",
+        { topic: trimmed },
+        {
+          timeout: 90000,
+        },
+      );
+      // data: { title, path, images }
+
+      // 2) Fetch the actual markdown content from the returned path.
+      //    Your server serves blog_files/ as static files via:
+      //    app.mount("/blog_files", StaticFiles(directory="blog_files")) in main.py
+      //    so GET {API_URL}/{path} returns the raw markdown text.
+      const mdRes = await api.get(`/${data.path}`, {
+        transformResponse: (res) => res, // keep raw text, don't let axios try to JSON.parse it
+      });
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: "assistant",
+          markdown: mdRes.data,
+          images: data.images || [],
+          path: data.path,
+        },
+      ]);
+    } catch (err: any) {
+      const detail =
+        err?.response?.data?.detail || err.message || "Something went wrong.";
+      setMessages((prev) => [
+        ...prev,
+        { type: "assistant", markdown: `⚠️ ${detail}`, images: [] },
+      ]);
+    } finally {
+      setLoading(false);
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
+    }
+  };
+
+  const renderImageGrid = (images: string[] | undefined) => {
+    if (!images || images.length === 0) return null;
     return (
-      <View style={styles.userRow}>
-        <View style={styles.userBubble}>
-          <Text style={styles.userText}>{message.text}</Text>
-        </View>
-        <UserAvatar />
+      <View style={styles.imageGrid}>
+        {images.slice(0, 6).map((url, idx) => (
+          <Image
+            key={idx}
+            source={{ uri: url }}
+            style={styles.imageBox}
+            resizeMode="cover"
+            // If a hotlinked image (e.g. lookaside.fbsbx.com) fails to load,
+            // it will just render the box background — no crash.
+            onError={() => {}}
+          />
+        ))}
       </View>
     );
-  }
+  };
 
-  return (
-    <View style={styles.assistantRow}>
-      <GPTAvatar />
-      <View style={styles.assistantBubble}>
-        <Text style={styles.assistantText}>{message.text}</Text>
+  const renderItem = ({ item }: { item: Message }) => {
+    if (item.type === "user") {
+      return (
+        <View style={styles.userRow}>
+          <View style={styles.userBubble}>
+            <Text style={styles.userText}>{item.topic}</Text>
+          </View>
+          <View style={styles.userAvatar}>
+            <Text style={styles.userAvatarText}>U</Text>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.assistantRow}>
+        <View style={styles.assistantAvatar}>
+          <Ionicons name="sparkles" size={14} color="#fff" />
+        </View>
+        <View style={styles.assistantContent}>
+          <View style={styles.assistantBubble}>
+            <Markdown style={markdownStyles}>{item.markdown}</Markdown>
+          </View>
+          {renderImageGrid(item.images)}
+        </View>
       </View>
-    </View>
-  );
-};
-
-// ── Main Screen ────────────────────────────────────────────────────────────
-export default function ChatScreen() {
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
-  const [input, setInput] = useState("I'd love to know more");
-  const listRef = useRef<FlatList>(null);
-
-  const sendMessage = () => {
-    const trimmed = input.trim();
-    if (!trimmed) return;
-
-    const userMsg: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      text: trimmed,
-    };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput("");
-
-    // Simulate a reply after a short delay
-    setTimeout(() => {
-      const reply: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        text: "That's a great question! Feel free to ask anything else about Pancasila or Indonesian history.",
-      };
-      setMessages((prev) => [...prev, reply]);
-      listRef.current?.scrollToEnd({ animated: true });
-    }, 800);
-
-    listRef.current?.scrollToEnd({ animated: true });
+    );
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* ── Message list ───────────────────────────────────────────── */}
+    <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={0}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
+        {/* Messages */}
         <FlatList
           ref={listRef}
           data={messages}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(_, idx) => String(idx)}
+          renderItem={renderItem}
           contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => <MessageBubble message={item} />}
           onContentSizeChange={() =>
             listRef.current?.scrollToEnd({ animated: true })
           }
         />
-        {/* ── Input bar ──────────────────────────────────────────────── */}
-        <View style={styles.inputBar}>
-          <TextInput
-            style={styles.textInput}
-            value={input}
-            onChangeText={setInput}
-            placeholder="Message ChatGPT"
-            placeholderTextColor="#AAAAAA"
-            multiline
-            returnKeyType="send"
-            onSubmitEditing={sendMessage}
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              !input.trim() && styles.sendButtonDisabled,
-            ]}
-            onPress={sendMessage}
-            disabled={!input.trim()}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name="send-sharp"
-              size={22}
-              color="white"
-              style={{ paddingLeft: 3 }}
+
+        {loading && (
+          <View style={styles.loadingRow}>
+            <ActivityIndicator size="small" color="#16a34a" />
+            <Text style={styles.loadingText}>Generating your blog…</Text>
+          </View>
+        )}
+
+        {/* Input — only shown before a topic has been confirmed */}
+        {!confirmed && (
+          <View style={styles.inputBar}>
+            <TextInput
+              style={styles.input}
+              placeholder="I'd love to know more"
+              placeholderTextColor="#9ca3af"
+              value={topic}
+              onChangeText={setTopic}
+              onSubmitEditing={handleSend}
+              returnKeyType="send"
             />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={styles.sendButton}
+              onPress={handleSend}
+              disabled={!topic.trim()}
+            >
+              <Ionicons name="send" size={18} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  flex: {
-    flex: 1,
-  },
-
-  // List
-  listContent: {
+  safeArea: { flex: 1, backgroundColor: "#fff" },
+  flex: { flex: 1 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 12,
-    gap: 20,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#e5e7eb",
   },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: "#111827" },
 
-  // User row
+  listContent: { padding: 16, paddingBottom: 24 },
+
   userRow: {
     flexDirection: "row",
+    alignItems: "flex-end",
     justifyContent: "flex-end",
-    alignItems: "flex-start",
-    gap: 8,
+    marginBottom: 16,
   },
   userBubble: {
-    backgroundColor: "#F0F0F0",
+    backgroundColor: "#f1f3f5",
     borderRadius: 18,
     borderBottomRightRadius: 4,
+    paddingHorizontal: 16,
     paddingVertical: 10,
-    paddingHorizontal: 14,
     maxWidth: "75%",
+    marginRight: 8,
   },
-  userText: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: "#1A1A1A",
+  userText: { fontSize: 15, color: "#111827" },
+  userAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#4f46e5",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  userAvatarText: { color: "#fff", fontWeight: "700", fontSize: 12 },
+
+  assistantRow: { flexDirection: "row", marginBottom: 16 },
+  assistantAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#16a34a",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  assistantContent: { flex: 1 },
+  assistantBubble: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 14,
+    padding: 14,
   },
 
-  // Assistant row
-  assistantRow: {
+  imageGrid: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    flexWrap: "wrap",
+    marginTop: 10,
     gap: 10,
   },
-  assistantBubble: {
-    flex: 1,
-    paddingTop: 4,
-  },
-  assistantText: {
-    fontSize: 15,
-    lineHeight: 23,
-    color: "#1A1A1A",
+  imageBox: {
+    width: "22%",
+    aspectRatio: 1,
+    borderRadius: 10,
+    backgroundColor: "#f3f4f6",
   },
 
-  // GPT avatar
-  gptAvatar: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "#10A37F",
+  loadingRow: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    marginTop: 2,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    gap: 8,
   },
-  gptAvatarText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-  },
+  loadingText: { color: "#6b7280", fontSize: 13 },
 
-  // User avatar
-  userAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#6B4EFF",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 2,
-  },
-  userAvatarText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-
-  // Input bar
   inputBar: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    paddingHorizontal: 14,
+    alignItems: "center",
+    paddingHorizontal: 12,
     paddingVertical: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#E5E5E5",
-    backgroundColor: "#FFFFFF",
-    gap: 10,
+    borderTopColor: "#e5e7eb",
   },
-  textInput: {
+  input: {
     flex: 1,
-    minHeight: 44,
-    maxHeight: 120,
-    backgroundColor: "#F7F7F7",
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: "#E5E5E5",
+    backgroundColor: "#f3f4f6",
+    borderRadius: 24,
     paddingHorizontal: 16,
-    paddingVertical: 11,
+    paddingVertical: 10,
     fontSize: 15,
-    color: "#1A1A1A",
-    lineHeight: 21,
+    color: "#111827",
   },
   sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#10A37F",
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#16a34a",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 2,
-  },
-  sendButtonDisabled: {
-    backgroundColor: "#C8C8C8",
-  },
-  sendIcon: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "700",
-    marginTop: -1,
+    marginLeft: 8,
   },
 });
+
+const markdownStyles = {
+  body: { fontSize: 15, color: "#111827", lineHeight: 22 },
+  heading1: { fontSize: 20, fontWeight: "700" as const, marginBottom: 8 },
+  heading2: {
+    fontSize: 18,
+    fontWeight: "700" as const,
+    marginTop: 10,
+    marginBottom: 6,
+  },
+  code_inline: {
+    backgroundColor: "#f3f4f6",
+    paddingHorizontal: 4,
+    borderRadius: 4,
+  },
+  code_block: {
+    backgroundColor: "#f3f4f6",
+    padding: 10,
+    borderRadius: 8,
+  },
+};

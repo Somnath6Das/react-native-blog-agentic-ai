@@ -13,8 +13,7 @@ load_dotenv()
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-app.include_router(auth.router)
-app.include_router(blogs.router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,7 +21,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serves files saved in UPLOAD_DIR at http://<host>/uploads/<filename>
+app.include_router(auth.router)
+
+# Serves markdown file saved in blog_files at http://<host>/blog_files/<filename>
+app.mount("/blog_files", StaticFiles(directory="blog_files"), name="blog_files")
+app.include_router(blogs.router)
+
+
+# Serves image file saved in UPLOAD_DIR at http://<host>/uploads/<filename>
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.include_router(profile.router)
 
