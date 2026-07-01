@@ -13,36 +13,46 @@ import { router, usePathname } from "expo-router";
 
 function CustomDrawerComponent(props: DrawerContentComponentProps) {
   const menuItems = [
-    {
-      id: 42,
-      title: "Item 42",
-    },
-    {
-      id: 43,
-      title: "Item 43",
-    },
-    {
-      id: 44,
-      title: "Item 44",
-    },
+    { id: 42, title: "Item 42" },
+    { id: 43, title: "Item 43" },
+    { id: 44, title: "Item 44" },
   ];
   const pathName = usePathname();
+
   return (
     <DrawerContentScrollView {...props}>
+      <View
+        style={{
+          alignItems: "flex-start",
+          paddingVertical: 20,
+          marginLeft: 15,
+        }}
+      >
+        <Text style={{ fontSize: 26 }}>Blog Writing Agent</Text>
+      </View>
+
       <DrawerItemList {...props} />
-      <View style={{ padding: 16, paddingTop: 40 }}>
-        <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+      <View style={{ padding: 16, paddingTop: 25 }}>
+        <Text style={{ fontSize: 18, fontWeight: "bold" }}>
           Your Previous Blogs
         </Text>
       </View>
       {menuItems.map((item) => {
-        const IsActive = pathName === `/create_blog/${item.id}`;
+        const isActive = pathName === `/create_blog/${item.id}`;
         return (
           <DrawerItem
-            focused={IsActive}
             key={item.id}
+            focused={isActive}
+            activeTintColor="blue"
+            inactiveTintColor="black"
             label={item.title}
-            onPress={() => router.push(`/create_blog/${item.id}`)}
+            labelStyle={{ fontSize: 18 }}
+            onPress={() =>
+              router.push({
+                pathname: "/create_blog/[id]",
+                params: { id: String(item.id) },
+              })
+            }
           />
         );
       })}
@@ -66,18 +76,28 @@ const DrawerLayout = () => {
           options={{
             drawerLabel: "Create Blog",
             title: "Create Blog",
-
+            drawerItemStyle: {
+              marginHorizontal: 12,
+              alignSelf: "flex-start",
+              width: 200,
+              borderRadius: 24,
+              paddingHorizontal: 4,
+            },
+            drawerLabelStyle: {
+              fontSize: 15,
+              alignSelf: "center",
+              fontWeight: "600",
+              marginLeft: -8,
+            },
             drawerIcon: ({ color, size }) => (
-              <AntDesign name="plus-circle" size={24} color="black" />
+              <AntDesign name="plus-circle" size={size} color={color} />
             ),
           }}
         />
         <Drawer.Screen
           name="[id]"
           options={{
-            drawerItemStyle: {
-              display: "none",
-            },
+            drawerItemStyle: { display: "none" },
           }}
         />
       </Drawer>
