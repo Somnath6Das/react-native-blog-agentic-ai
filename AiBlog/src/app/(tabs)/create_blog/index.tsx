@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Markdown from "@ronradtke/react-native-markdown-display";
 import api from "@/utils/api";
+import { useMenuStore } from "@/store/blog_store";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const IMAGE_GAP = 8;
@@ -34,6 +35,7 @@ type AssistantMessage = {
 type Message = UserMessage | AssistantMessage;
 
 export default function CreateBlogScreen() {
+  const addMenuItem = useMenuStore((s) => s.addMenuItem);
   const [topic, setTopic] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
@@ -74,6 +76,12 @@ export default function CreateBlogScreen() {
           path: data.path,
         },
       ]);
+      //! save to local store
+      addMenuItem({
+        title: data.title,
+        file_path: data.path,
+        images: data.images || [],
+      });
     } catch (err: any) {
       const detail =
         err?.response?.data?.detail || err.message || "Something went wrong.";

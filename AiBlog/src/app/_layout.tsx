@@ -3,8 +3,11 @@ import * as SecureStore from "expo-secure-store";
 import { useEffect, useRef, useState } from "react";
 import api from "@/utils/api";
 import useAuthStore from "@/store/auth_store";
+import { useMenuStore } from "@/store/blog_store";
+import { ActivityIndicator } from "react-native";
 
 const RootLayout = () => {
+  const hasHydrated = useMenuStore.persist.hasHydrated();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const isMounted = useRef(false);
 
@@ -34,6 +37,15 @@ const RootLayout = () => {
       setIsAuthenticated(false);
     }
   };
+  if (!hasHydrated) {
+    return <ActivityIndicator />; // or a splash/loading state
+  }
+  useEffect(() => {
+    const unsub = useMenuStore.persist.onFinishHydration(() => {
+      console.log("menu store rehydrated");
+    });
+    return unsub;
+  }, []);
   useEffect(() => {
     isMounted.current = true;
     const run = async () => {

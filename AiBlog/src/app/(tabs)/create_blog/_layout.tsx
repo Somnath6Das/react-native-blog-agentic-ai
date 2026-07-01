@@ -10,13 +10,17 @@ import {
 } from "expo-router/drawer";
 import { AntDesign } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
+import { useMenuStore } from "@/store/blog_store";
 
 function CustomDrawerComponent(props: DrawerContentComponentProps) {
-  const menuItems = [
-    { id: 42, title: "Item 42" },
-    { id: 43, title: "Item 43" },
-    { id: 44, title: "Item 44" },
-  ];
+  // const menuItems = [
+  //   { id: 42, title: "Item 42" },
+  //   { id: 43, title: "Item 43" },
+  //   { id: 44, title: "Item 44" },
+  // ];
+
+  const menuItems = useMenuStore((s) => s.menuItems);
+  const reversedItems = [...menuItems].reverse();
   const pathName = usePathname();
 
   return (
@@ -37,7 +41,7 @@ function CustomDrawerComponent(props: DrawerContentComponentProps) {
           Your Previous Blogs
         </Text>
       </View>
-      {menuItems.map((item) => {
+      {reversedItems.map((item) => {
         const isActive = pathName === `/create_blog/${item.id}`;
         return (
           <DrawerItem
