@@ -10,11 +10,19 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Markdown from "@ronradtke/react-native-markdown-display";
-import api from "@/utils/api"; // shared axios instance (AiBlog/src/utils/api.ts)
+import api from "@/utils/api";
+
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const IMAGE_GAP = 8;
+const IMAGE_COLS = 3;
+// Subtract: screen padding (16*2) + avatar width (28) + avatar margin (8)
+const GRID_WIDTH = SCREEN_WIDTH - 32 - 36;
+const IMAGE_SIZE = (GRID_WIDTH - IMAGE_GAP * (IMAGE_COLS - 1)) / IMAGE_COLS;
 
 type UserMessage = { type: "user"; topic: string };
 type AssistantMessage = {
@@ -25,17 +33,11 @@ type AssistantMessage = {
 };
 type Message = UserMessage | AssistantMessage;
 
-/**
- * Each entry in `messages` is either:
- *  { type: "user", topic: string }
- *  { type: "assistant", markdown: string, images: string[], path?: string }
- */
-
 export default function CreateBlogScreen() {
   const [topic, setTopic] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
-  const [confirmed, setConfirmed] = useState(false); // hides the input once a topic is sent
+  const [confirmed, setConfirmed] = useState(false);
   const listRef = useRef<FlatList<Message> | null>(null);
 
   const handleSend = async () => {
@@ -48,24 +50,19 @@ export default function CreateBlogScreen() {
     setLoading(true);
 
     try {
-      // 1) Kick off blog generation.
       // 90s timeout only on this call — blog gen (LLM + research + images) is slow.
       // Other api calls across the app are unaffected.
       const { data } = await api.post(
         "/blogs/create",
         { topic: trimmed },
-        {
-          timeout: 90000,
-        },
+        { timeout: 90000 },
       );
       // data: { title, path, images }
 
-      // 2) Fetch the actual markdown content from the returned path.
-      //    Your server serves blog_files/ as static files via:
-      //    app.mount("/blog_files", StaticFiles(directory="blog_files")) in main.py
-      //    so GET {API_URL}/{path} returns the raw markdown text.
+      // Fetch raw markdown content served as static file from FastAPI:
+      // app.mount("/blog_files", StaticFiles(directory="blog_files")) in main.py
       const mdRes = await api.get(`/${data.path}`, {
-        transformResponse: (res) => res, // keep raw text, don't let axios try to JSON.parse it
+        transformResponse: (res) => res, // keep raw text, don't JSON.parse it
       });
 
       setMessages((prev) => [
@@ -92,18 +89,31 @@ export default function CreateBlogScreen() {
 
   const renderImageGrid = (images: string[] | undefined) => {
     if (!images || images.length === 0) return null;
+
+    // Group into rows of IMAGE_COLS for reliable pixel-based layout
+    const rows: string[][] = [];
+    for (let i = 0; i < images.length; i += IMAGE_COLS) {
+      rows.push(images.slice(i, i + IMAGE_COLS));
+    }
+
     return (
       <View style={styles.imageGrid}>
-        {images.slice(0, 6).map((url, idx) => (
-          <Image
-            key={idx}
-            source={{ uri: url }}
-            style={styles.imageBox}
-            resizeMode="cover"
-            // If a hotlinked image (e.g. lookaside.fbsbx.com) fails to load,
-            // it will just render the box background — no crash.
-            onError={() => {}}
-          />
+        <Text style={styles.imagesLabel}>Related Images</Text>
+        {rows.map((row, rowIdx) => (
+          <View key={rowIdx} style={styles.imageRow}>
+            {row.map((url, colIdx) => (
+              <Image
+                key={colIdx}
+                source={{ uri: url }}
+                style={[
+                  styles.imageBox,
+                  { marginLeft: colIdx > 0 ? IMAGE_GAP : 0 },
+                ]}
+                resizeMode="cover"
+                onError={() => {}}
+              />
+            ))}
+          </View>
         ))}
       </View>
     );
@@ -193,19 +203,10 @@ export default function CreateBlogScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#fff" },
   flex: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e5e7eb",
-  },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: "#111827" },
 
   listContent: { padding: 16, paddingBottom: 24 },
 
+  // User bubble
   userRow: {
     flexDirection: "row",
     alignItems: "flex-end",
@@ -232,6 +233,7 @@ const styles = StyleSheet.create({
   },
   userAvatarText: { color: "#fff", fontWeight: "700", fontSize: 12 },
 
+  // Assistant bubble
   assistantRow: { flexDirection: "row", marginBottom: 16 },
   assistantAvatar: {
     width: 28,
@@ -241,6 +243,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: 8,
+    marginTop: 2,
   },
   assistantContent: { flex: 1 },
   assistantBubble: {
@@ -251,19 +254,28 @@ const styles = StyleSheet.create({
     padding: 14,
   },
 
+  // Image grid
   imageGrid: {
+    marginTop: 12,
+  },
+  imagesLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#6b7280",
+    marginBottom: 8,
+  },
+  imageRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 10,
-    gap: 10,
+    marginBottom: IMAGE_GAP,
   },
   imageBox: {
-    width: "22%",
-    aspectRatio: 1,
+    width: IMAGE_SIZE,
+    height: IMAGE_SIZE,
     borderRadius: 10,
     backgroundColor: "#f3f4f6",
   },
 
+  // Loading
   loadingRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -273,6 +285,7 @@ const styles = StyleSheet.create({
   },
   loadingText: { color: "#6b7280", fontSize: 13 },
 
+  // Input bar
   inputBar: {
     flexDirection: "row",
     alignItems: "center",
