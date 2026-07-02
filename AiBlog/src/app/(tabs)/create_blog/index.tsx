@@ -350,10 +350,16 @@ const markdownStyles = {
     backgroundColor: "#f3f4f6",
     paddingHorizontal: 4,
     borderRadius: 4,
+    color: "#111827",
   },
   code_block: {
     backgroundColor: "#f3f4f6",
     padding: 10,
     borderRadius: 8,
+    color: "#111827",
   },
+  link: { color: "#2563eb", textDecorationLine: "underline" as const },
+  textgroup: { flexShrink: 1, flexWrap: "wrap" as const },
+  list_item: { flexDirection: "row" as const, flexWrap: "wrap" as const },
+  bullet_list_icon: { marginRight: 6 },
 };

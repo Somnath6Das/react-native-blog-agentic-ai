@@ -391,7 +391,13 @@ Scope guard:
 Grounding policy:
 - If mode == open_book:
   - Do NOT introduce any specific event/company/model/funding/policy claim unless it is supported by provided Evidence URLs.
-  - For each event claim, attach a source as a Markdown link: ([Source](URL)).
+  - For each event claim, attach EXACTLY ONE markdown link right after the claim, in this
+    exact form (nothing before/after, no wrapping brackets, no double links):
+      (Source: [Short Title](URL))
+    Example — CORRECT:
+      Self-attention lets models weigh input elements against each other (Source: [IBM: What is Self-attention?](https://www.ibm.com/think/topics/self-attention)).
+    Example — WRONG (never do this — nested/doubled link):
+      [([IBM: What is Self-attention?](https://www.ibm.com/think/topics/self-attention))](https://www.ibm.com/think/topics/self-attention)
   - Only use URLs provided in Evidence. If not supported, write: "Not found in provided sources."
 - If requires_citations == true:
   - For outside-world claims, cite Evidence URLs the same way.
@@ -454,11 +460,45 @@ def worker_node(payload: dict) -> dict:
 # -----------------------------
 # 8) Reducer (merge)
 # -----------------------------
+import re
+
+# Fixes the broken pattern the LLM sometimes produces despite the prompt:
+#   [([Link Text](URL))](URL)
+# Collapses it to a single valid link: [Link Text](URL)
+_NESTED_LINK_RE = re.compile(r"\[\(\[([^\]]+)\]\(([^)]+)\)\)\]\([^)]+\)")
+
+# Matches any markdown link [text](url)
+_MD_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+
+# Matches bullet / numbered list item lines (-, *, +, or "1.")
+_LIST_ITEM_RE = re.compile(r"^(\s*(?:[-*+]|\d+\.)\s+)")
+
+
+def sanitize_markdown(md: str) -> str:
+    """Clean up LLM-generated markdown before it's served to the app.
+
+    1) Collapses nested/doubled citation links into a single valid link.
+    2) Strips hyperlinks out of list items entirely (keeping the link text),
+       since react-native-markdown-display overlaps text when a link wraps
+       inside a list item's row-flex bullet layout. Links in normal paragraph
+       text are left untouched and remain clickable.
+    """
+    md = _NESTED_LINK_RE.sub(r"[\1](\2)", md)
+
+    out_lines = []
+    for line in md.split("\n"):
+        if _LIST_ITEM_RE.match(line):
+            line = _MD_LINK_RE.sub(r"\1", line)
+        out_lines.append(line)
+    return "\n".join(out_lines)
+
+
 def reducer_node(state: State) -> dict:
     plan = state["plan"]
 
     ordered_sections = [md for _, md in sorted(state["sections"], key=lambda x: x[0])]
     body = "\n\n".join(ordered_sections).strip()
+    body = sanitize_markdown(body)
     final_md = f"# {plan.blog_title}\n\n{body}\n" # type: ignore
 
     # NOTE: file writing is intentionally NOT done here. The FastAPI route
