@@ -12,7 +12,7 @@ export interface MenuItem {
 interface MenuState {
   menuItems: MenuItem[];
   nextId: number;
-
+  resetKey: number;
   addMenuItem: (
     item: Omit<MenuItem, "id" | "images"> & { images?: string[] },
   ) => number;
@@ -22,6 +22,7 @@ interface MenuState {
   removeImage: (id: number, imageUrl: string) => void;
 
   updateMenuItem: (id: number, updates: Partial<Omit<MenuItem, "id">>) => void;
+  triggerCreateBlogReset: () => void;
 }
 
 export const useMenuStore = create<MenuState>()(
@@ -29,7 +30,10 @@ export const useMenuStore = create<MenuState>()(
     (set, get) => ({
       menuItems: [],
       nextId: 1,
-
+      resetKey: 0,
+      triggerCreateBlogReset: () =>
+        // NEW
+        set((state) => ({ resetKey: state.resetKey + 1 })),
       addMenuItem: (item) => {
         const newId = get().nextId;
         const newItem: MenuItem = {
@@ -81,6 +85,10 @@ export const useMenuStore = create<MenuState>()(
     {
       name: "menu-store", // AsyncStorage key
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        menuItems: state.menuItems,
+        nextId: state.nextId,
+      }), // NEW — don't persist resetKey, it's just a signal
     },
   ),
 );

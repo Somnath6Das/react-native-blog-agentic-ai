@@ -18,7 +18,7 @@ function CustomDrawerComponent(props: DrawerContentComponentProps) {
   //   { id: 43, title: "Item 43" },
   //   { id: 44, title: "Item 44" },
   // ];
-
+  const triggerCreateBlogReset = useMenuStore((s) => s.triggerCreateBlogReset);
   const menuItems = useMenuStore((s) => s.menuItems);
   const reversedItems = [...menuItems].reverse();
   const pathName = usePathname();
@@ -35,7 +35,29 @@ function CustomDrawerComponent(props: DrawerContentComponentProps) {
         <Text style={{ fontSize: 26 }}>Blog Writing Agent</Text>
       </View>
 
-      <DrawerItemList {...props} />
+      {/* REPLACED DrawerItemList with a manual "Create Blog" item */}
+      <DrawerItem
+        label="Create Blog"
+        icon={({ color, size }) => (
+          <AntDesign name="plus-circle" size={size} color={color} />
+        )}
+        focused={pathName === "/create_blog"}
+        activeTintColor="blue"
+        inactiveTintColor="black"
+        labelStyle={{ fontSize: 15, fontWeight: "600" }}
+        style={{
+          marginHorizontal: 12,
+          alignSelf: "flex-start",
+          width: 200,
+          borderRadius: 24,
+          paddingHorizontal: 4,
+        }}
+        onPress={() => {
+          triggerCreateBlogReset(); // NEW — always force a reset
+          router.push("/create_blog");
+        }}
+      />
+
       <View style={{ padding: 16, paddingTop: 25 }}>
         <Text style={{ fontSize: 18, fontWeight: "bold" }}>
           Your Previous Blogs

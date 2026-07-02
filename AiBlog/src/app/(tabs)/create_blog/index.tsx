@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -36,6 +36,7 @@ type AssistantMessage = {
 type Message = UserMessage | AssistantMessage;
 
 export default function CreateBlogScreen() {
+  const resetKey = useMenuStore((s) => s.resetKey);
   const addMenuItem = useMenuStore((s) => s.addMenuItem);
   const [topic, setTopic] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -50,6 +51,12 @@ export default function CreateBlogScreen() {
       setLoading(false);
     }, []),
   );
+  useEffect(() => {
+    setTopic("");
+    setMessages([]);
+    setConfirmed(false);
+    setLoading(false);
+  }, [resetKey]);
   const handleSend = async () => {
     const trimmed = topic.trim();
     if (!trimmed || loading) return;
