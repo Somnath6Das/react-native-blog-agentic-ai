@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Markdown from "@ronradtke/react-native-markdown-display";
 import api from "@/utils/api";
 import { useMenuStore } from "@/store/blog_store";
+import { useFocusEffect } from "expo-router";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const IMAGE_GAP = 8;
@@ -41,7 +42,14 @@ export default function CreateBlogScreen() {
   const [loading, setLoading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const listRef = useRef<FlatList<Message> | null>(null);
-
+  useFocusEffect(
+    useCallback(() => {
+      setTopic("");
+      setMessages([]);
+      setConfirmed(false);
+      setLoading(false);
+    }, []),
+  );
   const handleSend = async () => {
     const trimmed = topic.trim();
     if (!trimmed || loading) return;
