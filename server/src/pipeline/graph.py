@@ -105,7 +105,7 @@ openrouter_llm = ChatOpenAI(
     openai_api_key=os.environ["OPENROUTER_API_KEY"], # type: ignore
     openai_api_base="https://openrouter.ai/api/v1", # type: ignore
 )
-# middleware that switch the llm if groq token is exceded
+# LangChain's Runnable interface switch the llm if groq token is exceded
 llm = groq_llm.with_fallbacks(
     [openrouter_llm],
     exceptions_to_handle=(

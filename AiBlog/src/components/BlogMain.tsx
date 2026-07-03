@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Markdown from "@ronradtke/react-native-markdown-display";
+import useAuthStore from "@/store/auth_store";
 
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -39,7 +40,7 @@ export default function BlogMain({
   messages,
   setMessages,
   handleSend,
-  user,
+  
   topic,
   setTopic,
   loading,
@@ -48,6 +49,7 @@ export default function BlogMain({
   setConfirmed,
   listRef 
 }) {
+   const { user, clearAuth } = useAuthStore();
   const searchImageGrid = (images: string[] | undefined) => {
     if (!images || images.length === 0) return null;
 
