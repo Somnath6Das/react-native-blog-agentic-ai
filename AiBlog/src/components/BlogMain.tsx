@@ -49,7 +49,7 @@ export default function BlogMain({
   setConfirmed,
   listRef 
 }) {
-   const { user, clearAuth } = useAuthStore();
+  const { user, clearAuth } = useAuthStore();
   const searchImageGrid = (images: string[] | undefined) => {
     if (!images || images.length === 0) return null;
 
