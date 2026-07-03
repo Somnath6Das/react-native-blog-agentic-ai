@@ -2,8 +2,9 @@ import { View, Text } from "react-native";
 import React from "react";
 import { useLocalSearchParams, Stack } from "expo-router";
 import { useMenuStore } from "@/store/blog_store";
+import BlogMain from "@/components/BlogMain";
 
-const BlogPage = () => {
+const LocalBlogPage = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const item = useMenuStore((s) =>
     s.menuItems.find((i) => i.id === Number(id)),
@@ -23,8 +24,17 @@ const BlogPage = () => {
 
       <Text>{item.file_path}</Text>
       <Text>{item.images}</Text>
+      {/* <BlogMain
+        messages={messages}
+        handleSend={handleSend}
+        topic={topic}
+        setTopic={setTopic}
+        loading={loading}
+        confirmed={confirmed}
+        listRef={listRef}
+      /> */}
     </View>
   );
 };
 
-export default BlogPage;
+export default LocalBlogPage;

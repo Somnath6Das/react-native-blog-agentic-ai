@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import { Dispatch, SetStateAction } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import Markdown from "@ronradtke/react-native-markdown-display";
 import useAuthStore from "@/store/auth_store";
-
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const IMAGE_GAP = 8;
@@ -36,20 +35,26 @@ const BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
 // Replace with your actual image source
 const AVATAR_URI = "https://cdn-icons-png.flaticon.com/512/3177/3177440.png";
 
+interface Props {
+  messages: Message[];
+  handleSend?: () => Promise<void>;
+  topic?: string;
+  setTopic?: Dispatch<SetStateAction<string>>;
+  loading?: boolean;
+  confirmed?: boolean;
+  listRef: React.RefObject<FlatList<Message> | null>;
+}
+
 export default function BlogMain({
   messages,
-  setMessages,
-  handleSend,
-  
+  handleSend = async () => {},
   topic,
-  setTopic,
-  loading,
-  setLoading
-  confirmed,
-  setConfirmed,
-  listRef 
-}) {
-  const { user, clearAuth } = useAuthStore();
+  setTopic = () => {},
+  loading = false,
+  confirmed = false,
+  listRef,
+}: Props) {
+  const { user } = useAuthStore();
   const searchImageGrid = (images: string[] | undefined) => {
     if (!images || images.length === 0) return null;
 
@@ -159,7 +164,7 @@ export default function BlogMain({
             <TouchableOpacity
               style={styles.sendButton}
               onPress={handleSend}
-              disabled={!topic.trim()}
+              disabled={!topic?.trim()}
             >
               <Ionicons name="send" size={18} color="#fff" />
             </TouchableOpacity>
