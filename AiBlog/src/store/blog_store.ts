@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface MenuItem {
   id: number;
+  user_topic: string;
   title: string;
   file_path?: string;
   images: string[];
@@ -38,6 +39,7 @@ export const useMenuStore = create<MenuState>()(
         const newId = get().nextId;
         const newItem: MenuItem = {
           id: newId,
+          user_topic: item.user_topic,
           title: item.title,
           file_path: item.file_path,
           images: item.images ?? [],

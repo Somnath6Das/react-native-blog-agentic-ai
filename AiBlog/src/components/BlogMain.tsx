@@ -14,10 +14,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Markdown from "@ronradtke/react-native-markdown-display";
-import api from "@/utils/api";
-import { useMenuStore } from "@/store/blog_store";
-import { useFocusEffect } from "expo-router";
-import useAuthStore from "@/store/auth_store";
+
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const IMAGE_GAP = 8;
@@ -38,84 +35,20 @@ const BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
 // Replace with your actual image source
 const AVATAR_URI = "https://cdn-icons-png.flaticon.com/512/3177/3177440.png";
 
-export default function CreateBlogScreen() {
-  const { user, clearAuth } = useAuthStore();
-  const resetKey = useMenuStore((s) => s.resetKey);
-  const addMenuItem = useMenuStore((s) => s.addMenuItem);
-  const [topic, setTopic] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
-  const listRef = useRef<FlatList<Message> | null>(null);
-  useFocusEffect(
-    useCallback(() => {
-      setTopic("");
-      setMessages([]);
-      setConfirmed(false);
-      setLoading(false);
-    }, []),
-  );
-  useEffect(() => {
-    setTopic("");
-    setMessages([]);
-    setConfirmed(false);
-    setLoading(false);
-  }, [resetKey]);
-  const handleSend = async () => {
-    const trimmedTopic = topic.trim();
-    if (!trimmedTopic || loading) return;
-
-    setMessages((prev) => [...prev, { type: "user", topic: trimmedTopic }]);
-    setTopic("");
-    setConfirmed(true);
-    setLoading(true);
-
-    try {
-      // 90s timeout only on this call — blog gen (LLM + research + images) is slow.
-      // Other api calls across the app are unaffected.
-      const { data } = await api.post(
-        "/blogs/create",
-        { topic: trimmedTopic },
-        { timeout: 90000 },
-      );
-      // data: { title, path, images }
-
-      // Fetch raw markdown content served as static file from FastAPI:
-      // app.mount("/blog_files", StaticFiles(directory="blog_files")) in main.py
-      const mdRes = await api.get(`/${data.path}`, {
-        transformResponse: (res) => res, // keep raw text, don't JSON.parse it
-      });
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          type: "assistant",
-          markdown: mdRes.data,
-          images: data.images || [],
-          path: data.path,
-        },
-      ]);
-      //! save to local store
-      addMenuItem({
-        user_topic: trimmedTopic,
-        title: data.title,
-        file_path: data.path,
-        images: data.images || [],
-      });
-    } catch (err: any) {
-      const detail =
-        err?.response?.data?.detail || err.message || "Something went wrong.";
-      setMessages((prev) => [
-        ...prev,
-        { type: "assistant", markdown: `⚠️ ${detail}`, images: [] },
-      ]);
-    } finally {
-      setLoading(false);
-      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
-    }
-  };
-
-  const renderImageGrid = (images: string[] | undefined) => {
+export default function BlogMain({
+  messages,
+  setMessages,
+  handleSend,
+  user,
+  topic,
+  setTopic,
+  loading,
+  setLoading
+  confirmed,
+  setConfirmed,
+  listRef 
+}) {
+  const searchImageGrid = (images: string[] | undefined) => {
     if (!images || images.length === 0) return null;
 
     // Group into rows of IMAGE_COLS for reliable pixel-based layout
@@ -147,7 +80,7 @@ export default function CreateBlogScreen() {
     );
   };
 
-  const renderItem = ({ item }: { item: Message }) => {
+  const userTextAvatar = ({ item }: { item: Message }) => {
     if (item.type === "user") {
       return (
         <View style={styles.userRow}>
@@ -155,7 +88,6 @@ export default function CreateBlogScreen() {
             <Text style={styles.userText}>{item.topic}</Text>
           </View>
           <View style={styles.userAvatar}>
-            {/* <Text style={styles.userAvatarText}>U</Text> */}
             <Image
               source={{
                 uri: user?.avatar_url
@@ -178,7 +110,7 @@ export default function CreateBlogScreen() {
           <View style={styles.assistantBubble}>
             <Markdown style={markdownStyles}>{item.markdown}</Markdown>
           </View>
-          {renderImageGrid(item.images)}
+          {searchImageGrid(item.images)}
         </View>
       </View>
     );
@@ -196,7 +128,7 @@ export default function CreateBlogScreen() {
           ref={listRef}
           data={messages}
           keyExtractor={(_, idx) => String(idx)}
-          renderItem={renderItem}
+          renderItem={userTextAvatar}
           contentContainerStyle={styles.listContent}
           onContentSizeChange={() =>
             listRef.current?.scrollToEnd({ animated: true })
