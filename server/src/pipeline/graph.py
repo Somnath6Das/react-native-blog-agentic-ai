@@ -13,10 +13,14 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.types import Send
 
 from langchain_groq import ChatGroq
-from langchain_nvidia_ai_endpoints import ChatNVIDIA  # noqa: F401 (kept for easy provider swap)
+from langchain_nvidia_ai_endpoints import ChatNVIDIA  
+from langchain_openai import ChatOpenAI
 
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_tavily import TavilySearch
+
+import groq
+from openai import RateLimitError as OpenAIRateLimitError, BadRequestError as OpenAIBadRequestError
 
 load_dotenv()
 
@@ -91,7 +95,25 @@ class State(TypedDict):
 # -----------------------------
 # 2) LLM
 # -----------------------------
-llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=os.environ.get("GROQ_API_KEY")) # type: ignore
+
+
+
+groq_llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=os.environ.get("GROQ_API_KEY")) # type: ignore
+
+openrouter_llm = ChatOpenAI(
+    model= "meta-llama/llama-3.3-70b-instruct",
+    openai_api_key=os.environ["OPENROUTER_API_KEY"], # type: ignore
+    openai_api_base="https://openrouter.ai/api/v1", # type: ignore
+)
+# middleware that switch the llm if groq token is exceded
+llm = groq_llm.with_fallbacks(
+    [openrouter_llm],
+    exceptions_to_handle=(
+        groq.RateLimitError,      # 429, includes token-per-minute limit hit
+        groq.APIStatusError,      # covers 400s like context_length_exceeded
+        groq.APIConnectionError,  # network issues
+    ),
+)
 
 # Alternative providers (swap the assignment above if needed):
 # llm = ChatNVIDIA(model="meta/llama-3.2-3b-instruct", api_key=os.environ.get("NVIDIA_API_KEY"))
