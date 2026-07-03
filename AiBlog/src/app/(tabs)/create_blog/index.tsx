@@ -18,6 +18,7 @@ import Markdown from "@ronradtke/react-native-markdown-display";
 import api from "@/utils/api";
 import { useMenuStore } from "@/store/blog_store";
 import { useFocusEffect } from "expo-router";
+import useAuthStore from "@/store/auth_store";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const IMAGE_GAP = 8;
@@ -34,8 +35,12 @@ type AssistantMessage = {
   path?: string;
 };
 type Message = UserMessage | AssistantMessage;
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
+// Replace with your actual image source
+const AVATAR_URI = "https://cdn-icons-png.flaticon.com/512/3177/3177440.png";
 
 export default function CreateBlogScreen() {
+  const { user, clearAuth } = useAuthStore();
   const resetKey = useMenuStore((s) => s.resetKey);
   const addMenuItem = useMenuStore((s) => s.addMenuItem);
   const [topic, setTopic] = useState("");
@@ -150,7 +155,15 @@ export default function CreateBlogScreen() {
             <Text style={styles.userText}>{item.topic}</Text>
           </View>
           <View style={styles.userAvatar}>
-            <Text style={styles.userAvatarText}>U</Text>
+            {/* <Text style={styles.userAvatarText}>U</Text> */}
+            <Image
+              source={{
+                uri: user?.avatar_url
+                  ? `${BASE_URL}${user.avatar_url}`
+                  : AVATAR_URI,
+              }}
+              style={styles.avatar}
+            />
           </View>
         </View>
       );
@@ -172,9 +185,9 @@ export default function CreateBlogScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <KeyboardAvoidingView
-        style={styles.flex}
+        style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
@@ -219,15 +232,14 @@ export default function CreateBlogScreen() {
           </View>
         )}
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#fff" },
-  flex: { flex: 1 },
+  safeArea: { flex: 1, backgroundColor: "#fff", padding: 5 },
 
-  listContent: { padding: 16, paddingBottom: 24 },
+  listContent: { paddingBottom: 24 },
 
   // User bubble
   userRow: {
@@ -247,12 +259,13 @@ const styles = StyleSheet.create({
   },
   userText: { fontSize: 15, color: "#111827" },
   userAvatar: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatar: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#4f46e5",
-    alignItems: "center",
-    justifyContent: "center",
   },
   userAvatarText: { color: "#fff", fontWeight: "700", fontSize: 12 },
 

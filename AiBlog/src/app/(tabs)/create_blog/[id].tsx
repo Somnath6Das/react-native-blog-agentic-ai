@@ -20,6 +20,8 @@ const BlogPage = () => {
     >
       <Stack.Screen options={{ title: item.title }} />
       <Text>{item.title}</Text>
+      <Text>{item.file_path}</Text>
+      <Text>{item.images}</Text>
     </View>
   );
 };
