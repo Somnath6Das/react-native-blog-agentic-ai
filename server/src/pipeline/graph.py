@@ -91,10 +91,10 @@ class State(TypedDict):
 # -----------------------------
 # 2) LLM
 # -----------------------------
-# llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=os.environ.get("GROQ_API_KEY")) # type: ignore
+llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=os.environ.get("GROQ_API_KEY")) # type: ignore
 
 # Alternative providers (swap the assignment above if needed):
-llm = ChatNVIDIA(model="meta/llama-3.2-3b-instruct", api_key=os.environ.get("NVIDIA_API_KEY"))
+# llm = ChatNVIDIA(model="meta/llama-3.2-3b-instruct", api_key=os.environ.get("NVIDIA_API_KEY"))
 
 
 # -----------------------------
