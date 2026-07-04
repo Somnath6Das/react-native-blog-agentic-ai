@@ -1,7 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { FlatList, Dimensions } from "react-native";
+import { ScrollView, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import Markdown from "@ronradtke/react-native-markdown-display";
 import api from "@/utils/api";
 import { useMenuStore } from "@/store/blog_store";
 import { useFocusEffect } from "expo-router";
@@ -18,7 +17,7 @@ const IMAGE_SIZE = (GRID_WIDTH - IMAGE_GAP * (IMAGE_COLS - 1)) / IMAGE_COLS;
 type UserMessage = { type: "user"; topic: string };
 type AssistantMessage = {
   type: "assistant";
-  markdown: string;
+  html: string;
   images: string[];
   path?: string;
 };
@@ -31,7 +30,7 @@ export default function CreateBlogScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
-  const listRef = useRef<FlatList<Message> | null>(null);
+  const listRef = useRef<ScrollView | null>(null);
   useFocusEffect(
     useCallback(() => {
       setTopic("");
@@ -65,9 +64,9 @@ export default function CreateBlogScreen() {
       );
       // data: { title, path, images }
 
-      // Fetch raw markdown content served as static file from FastAPI:
+      // Fetch the generated HTML content served as a static file from FastAPI:
       // app.mount("/blog_files", StaticFiles(directory="blog_files")) in main.py
-      const mdRes = await api.get(`/${data.path}`, {
+      const htmlRes = await api.get(`/${data.path}`, {
         transformResponse: (res) => res, // keep raw text, don't JSON.parse it
       });
 
@@ -75,7 +74,7 @@ export default function CreateBlogScreen() {
         ...prev,
         {
           type: "assistant",
-          markdown: mdRes.data,
+          html: htmlRes.data,
           images: data.images || [],
           path: data.path,
         },
@@ -91,7 +90,7 @@ export default function CreateBlogScreen() {
         err?.response?.data?.detail || err.message || "Something went wrong.";
       setMessages((prev) => [
         ...prev,
-        { type: "assistant", markdown: `⚠️ ${detail}`, images: [] },
+        { type: "assistant", html: `⚠️ ${detail}`, images: [] },
       ]);
     } finally {
       setLoading(false);

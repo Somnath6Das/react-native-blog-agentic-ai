@@ -4,16 +4,17 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  FlatList,
+  ScrollView,
   Image,
   ActivityIndicator,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   Dimensions,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import Markdown from "@ronradtke/react-native-markdown-display";
+import RenderHtml from "react-native-render-html";
 import useAuthStore from "@/store/auth_store";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -22,11 +23,14 @@ const IMAGE_COLS = 3;
 // Subtract: screen padding (16*2) + avatar width (28) + avatar margin (8)
 const GRID_WIDTH = SCREEN_WIDTH - 32 - 36;
 const IMAGE_SIZE = (GRID_WIDTH - IMAGE_GAP * (IMAGE_COLS - 1)) / IMAGE_COLS;
+// Content width for RenderHtml: safeArea padding (5*2) + avatar (28) +
+// avatar margin (8) + bubble padding (14*2)
+const HTML_CONTENT_WIDTH = SCREEN_WIDTH - 74;
 
 type UserMessage = { type: "user"; topic: string };
 type AssistantMessage = {
   type: "assistant";
-  markdown: string;
+  html: string;
   images: string[];
   path?: string;
 };
@@ -42,7 +46,7 @@ interface Props {
   setTopic?: Dispatch<SetStateAction<string>>;
   loading?: boolean;
   confirmed?: boolean;
-  listRef: React.RefObject<FlatList<Message> | null>;
+  listRef: React.RefObject<ScrollView | null>;
 }
 
 // --- Memoized image grid ------------------------------------------------
@@ -90,7 +94,7 @@ const ImageGrid = memo(function ImageGrid({
 // React.memo skips re-rendering a row entirely if its `item` reference and
 // `avatarUri` haven't changed, which is what actually silences the
 // "large list slow to update" warning — otherwise every row re-renders
-// (and Markdown re-parses its whole AST) whenever the list re-renders.
+// (and RenderHtml re-parses its whole DOM tree) whenever the list re-renders.
 const MessageRow = memo(function MessageRow({
   item,
   avatarUri,
@@ -118,7 +122,18 @@ const MessageRow = memo(function MessageRow({
       </View>
       <View style={styles.assistantContent}>
         <View style={styles.assistantBubble}>
-          <Markdown style={markdownStyles}>{item.markdown}</Markdown>
+          <RenderHtml
+            contentWidth={HTML_CONTENT_WIDTH}
+            source={{ html: item.html }}
+            tagsStyles={htmlStyles}
+            renderersProps={{
+              a: {
+                onPress: (_event, href) => {
+                  if (href) Linking.openURL(href);
+                },
+              },
+            }}
+          />
         </View>
         <ImageGrid images={item.images} />
       </View>
@@ -141,15 +156,11 @@ export default function BlogMain({
     ? `${BASE_URL}${user.avatar_url}`
     : AVATAR_URI;
 
-  // Stable, meaningful keys instead of array index — lets FlatList/React
-  // correctly diff items when messages are appended, instead of treating
-  // every row after an insertion point as "changed".
+  // Stable, meaningful keys instead of array index — lets React correctly
+  // diff items when messages are appended, instead of treating every row
+  // after an insertion point as "changed".
   const keyExtractor = (item: Message, idx: number) =>
     item.type === "user" ? `u-${idx}` : `a-${item.path ?? idx}`;
-
-  const renderItem = ({ item }: { item: Message }) => (
-    <MessageRow item={item} avatarUri={avatarUri} />
-  );
 
   return (
     <View style={styles.safeArea}>
@@ -158,17 +169,22 @@ export default function BlogMain({
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-        {/* Messages */}
-        <FlatList
-          ref={listRef}
-          data={messages}
-          keyExtractor={keyExtractor}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          // onContentSizeChange={() =>
-          //   listRef.current?.scrollToEnd({ animated: false })
-          // }
-        />
+        {/* Messages — plain ScrollView instead of FlatList. This chat only
+            ever has a couple of items (the topic + the answer), so
+            FlatList's virtualization buys nothing, and its documented
+            tradeoff — content rendered asynchronously offscreen, which can
+            show blank content if you scroll faster than the fill rate — was
+            causing a blank/cut-off flash when scrolling through a long blog
+            post. */}
+        <ScrollView ref={listRef} contentContainerStyle={styles.listContent}>
+          {messages.map((item, idx) => (
+            <MessageRow
+              key={keyExtractor(item, idx)}
+              item={item}
+              avatarUri={avatarUri}
+            />
+          ))}
+        </ScrollView>
 
         {loading && (
           <View style={styles.loadingRow}>
@@ -317,29 +333,36 @@ const styles = StyleSheet.create({
   },
 });
 
-const markdownStyles = {
+// tagsStyles for react-native-render-html — keyed by HTML tag, since the
+// server now generates HTML fragments directly (h2, p, ul/li, a, code, pre).
+const htmlStyles = {
   body: { fontSize: 15, color: "#111827", lineHeight: 22 },
-  heading1: { fontSize: 20, fontWeight: "700" as const, marginBottom: 8 },
-  heading2: {
+  p: { marginTop: 0, marginBottom: 10 },
+  h1: { fontSize: 20, fontWeight: "700" as const, marginBottom: 8 },
+  h2: {
     fontSize: 18,
     fontWeight: "700" as const,
     marginTop: 10,
     marginBottom: 6,
   },
-  code_inline: {
+  h3: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  a: { color: "#2563eb", textDecorationLine: "underline" as const },
+  code: {
     backgroundColor: "#f3f4f6",
     paddingHorizontal: 4,
     borderRadius: 4,
     color: "#111827",
   },
-  code_block: {
+  pre: {
     backgroundColor: "#f3f4f6",
     padding: 10,
     borderRadius: 8,
     color: "#111827",
   },
-  link: { color: "#2563eb", textDecorationLine: "underline" as const },
-  textgroup: { flexShrink: 1, flexWrap: "wrap" as const },
-  list_item: { flexDirection: "row" as const, flexWrap: "wrap" as const },
-  bullet_list_icon: { marginRight: 6 },
+  li: { marginBottom: 4 },
 };

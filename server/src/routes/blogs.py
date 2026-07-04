@@ -18,7 +18,7 @@ IMAGE_RESULTS_COUNT = 8
 
 router = APIRouter(prefix="/blogs", tags=["blogs"])
 
-# Directory where generated markdown files are stored.
+# Directory where generated blog files are stored.
 # This is relative to wherever the server is started from — make it absolute
 # if you want it independent of CWD.
 BLOG_FILES_DIR = Path("blog_files")
@@ -31,7 +31,7 @@ class BlogRequest(BaseModel):
 
 class BlogResponse(BaseModel):
     title: str
-    path: str  # e.g. "blog_files/fine-tuning-in-2026-ab12cd.md"
+    path: str  # e.g. "blog_files/fine-tuning-in-2026-ab12cd.html"
     images: List[str] = []  # array of full-size image URLs
 
 
@@ -46,10 +46,10 @@ def slugify(text: str, max_len: int = 30) -> str:
 
 
 def generate_filename(blog_title: str) -> str:
-    """Generate a short, unique, safe filename for the markdown file (no directory)."""
+    """Generate a short, unique, safe filename for the blog file (no directory)."""
     slug = slugify(blog_title)
     suffix = uuid.uuid4().hex[:6]
-    return f"{slug}-{suffix}.md"
+    return f"{slug}-{suffix}.html"
 
 
 @router.post("/create", response_model=BlogResponse)
@@ -76,9 +76,9 @@ async def create_blog(body: BlogRequest):
         raise HTTPException(status_code=500, detail=f"Blog generation failed: {exc}") from exc
 
     plan = result.get("plan") # type: ignore
-    final_md = result.get("final") # type: ignore
+    final_html = result.get("final") # type: ignore
 
-    if plan is None or not final_md:
+    if plan is None or not final_html:
         raise HTTPException(status_code=500, detail="Pipeline did not produce a final blog post.")
 
     blog_title = plan.blog_title
@@ -87,7 +87,9 @@ async def create_blog(body: BlogRequest):
 
     # Write here instead of inside reducer_node, so the route fully controls
     # naming/location (avoids collisions + unsafe characters from raw titles).
-    file_path.write_text(final_md, encoding="utf-8")
+    # graph.py's reducer_node already produces HTML directly (the worker nodes
+    # write HTML fragments, not markdown), so no conversion step is needed here.
+    file_path.write_text(final_html, encoding="utf-8")
 
     # Image search is blocking (requests), run off the event loop like invoke().
     # Search by blog_title (more specific than the raw topic) for better hits.

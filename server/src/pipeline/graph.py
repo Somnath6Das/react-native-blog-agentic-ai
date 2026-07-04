@@ -12,15 +12,12 @@ from pydantic import BaseModel, Field
 from langgraph.graph import StateGraph, START, END
 from langgraph.types import Send
 
+import groq
 from langchain_groq import ChatGroq
-from langchain_nvidia_ai_endpoints import ChatNVIDIA  
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI  # used for OpenRouter (OpenAI-compatible API)
 
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_tavily import TavilySearch
-
-import groq
-from openai import RateLimitError as OpenAIRateLimitError, BadRequestError as OpenAIBadRequestError
 
 load_dotenv()
 
@@ -88,16 +85,21 @@ class State(TypedDict):
     plan: Optional[Plan]
 
     # workers
-    sections: Annotated[List[tuple[int, str]], operator.add]  # (task_id, section_md)
+    sections: Annotated[List[tuple[int, str]], operator.add]  # (task_id, section_html)
     final: str
 
 
 # -----------------------------
 # 2) LLM
 # -----------------------------
-
-
-
+# OpenRouter is OpenAI-API-compatible: same ChatOpenAI client, just pointed at
+# OpenRouter's base_url with an OpenRouter API key instead of an OpenAI one.
+# Model string format is "<provider>/<model>", e.g. "meta-llama/llama-3.3-70b-instruct".
+# Structured output (with_structured_output, used below for RouterDecision/Plan)
+# needs a model that supports tool/function calling on OpenRouter — most flagship
+# models do (OpenAI, Anthropic, Google, and Meta's larger Llama models); if you
+# swap to a smaller/less capable model and orchestrator_node starts raising the
+# "LLM returned None for Plan" error, that's usually why.
 groq_llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=os.environ.get("GROQ_API_KEY")) # type: ignore
 
 openrouter_llm = ChatOpenAI(
@@ -114,9 +116,6 @@ llm = groq_llm.with_fallbacks(
         groq.APIConnectionError,  # network issues
     ),
 )
-
-# Alternative providers (swap the assignment above if needed):
-# llm = ChatNVIDIA(model="meta/llama-3.2-3b-instruct", api_key=os.environ.get("NVIDIA_API_KEY"))
 
 
 # -----------------------------
@@ -396,13 +395,19 @@ def fanout(state: State):
 # 7) Worker (write one section)
 # -----------------------------
 WORKER_SYSTEM = """You are a senior technical writer and developer advocate.
-Write ONE section of a technical blog post in Markdown.
+Write ONE section of a technical blog post as a raw HTML fragment (NOT Markdown,
+and NOT a full document — no <html>, <head>, or <body> tags).
 
 Hard constraints:
 - Follow the provided Goal and cover ALL Bullets in order (do not skip or merge bullets).
 - Stay close to Target words (±15%).
-- Output ONLY the section content in Markdown (no blog title H1, no extra commentary).
-- Start with a '## <Section Title>' heading.
+- Output ONLY the section's HTML fragment (no blog title <h1>, no extra commentary, no Markdown syntax anywhere).
+- Start with a '<h2>Section Title</h2>' heading.
+- Only use these tags: <h2>, <h3>, <p>, <ul>, <ol>, <li>, <strong>, <em>, <code>, <pre>, <a href="...">.
+- Every tag must be explicitly closed. NEVER nest an <a> tag inside another <a> tag.
+  NEVER put a block tag (<p>, <ul>, <h2>, etc.) inside a <p>.
+- Inside <code>/<pre>, escape angle brackets and ampersands as &lt; &gt; &amp; so the
+  fragment stays valid HTML.
 
 Scope guard:
 - If blog_kind == "news_roundup": do NOT turn this into a tutorial/how-to guide.
@@ -412,23 +417,24 @@ Scope guard:
 Grounding policy:
 - If mode == open_book:
   - Do NOT introduce any specific event/company/model/funding/policy claim unless it is supported by provided Evidence URLs.
-  - For each event claim, attach EXACTLY ONE markdown link right after the claim, in this
-    exact form (nothing before/after, no wrapping brackets, no double links):
-      (Source: [Short Title](URL))
+  - For each event claim, attach EXACTLY ONE citation link right after the claim, in this
+    exact HTML form (a single <a> tag, nothing wrapping it):
+      (Source: <a href="URL">Short Title</a>)
     Example — CORRECT:
-      Self-attention lets models weigh input elements against each other (Source: [IBM: What is Self-attention?](https://www.ibm.com/think/topics/self-attention)).
+      <p>Self-attention lets models weigh input elements against each other (Source: <a href="https://www.ibm.com/think/topics/self-attention">IBM: What is Self-attention?</a>).</p>
     Example — WRONG (never do this — nested/doubled link):
-      [([IBM: What is Self-attention?](https://www.ibm.com/think/topics/self-attention))](https://www.ibm.com/think/topics/self-attention)
+      <a href="https://www.ibm.com/think/topics/self-attention">(Source: <a href="https://www.ibm.com/think/topics/self-attention">IBM: What is Self-attention?</a>)</a>
   - Only use URLs provided in Evidence. If not supported, write: "Not found in provided sources."
 - If requires_citations == true:
   - For outside-world claims, cite Evidence URLs the same way.
 - Evergreen reasoning is OK without citations unless requires_citations is true.
 
 Code:
-- If requires_code == true, include at least one minimal, correct code snippet relevant to the bullets.
+- If requires_code == true, include at least one minimal, correct code snippet inside
+  <pre><code>...</code></pre>, relevant to the bullets.
 
 Style:
-- Short paragraphs, bullets where helpful, code fences for code.
+- Short paragraphs (<p>), <ul>/<li> bullets where helpful, <pre><code> for code.
 - Avoid fluff/marketing. Be precise and implementation-oriented.
 """
 
@@ -449,7 +455,7 @@ def worker_node(payload: dict) -> dict:
             for e in evidence[:20]
         )
 
-    section_md = llm.invoke(
+    section_html = llm.invoke(
         [
             SystemMessage(content=WORKER_SYSTEM),
             HumanMessage(
@@ -475,7 +481,7 @@ def worker_node(payload: dict) -> dict:
         ]
     ).content.strip() # type: ignore
 
-    return {"sections": [(task.id, section_md)]}
+    return {"sections": [(task.id, section_html)]}
 
 
 # -----------------------------
@@ -484,48 +490,44 @@ def worker_node(payload: dict) -> dict:
 import re
 
 # Fixes the broken pattern the LLM sometimes produces despite the prompt:
-#   [([Link Text](URL))](URL)
-# Collapses it to a single valid link: [Link Text](URL)
-_NESTED_LINK_RE = re.compile(r"\[\(\[([^\]]+)\]\(([^)]+)\)\)\]\([^)]+\)")
+#   <a href="URL1">(Source: <a href="URL2">Short Title</a>)</a>
+# i.e. an <a> tag nested inside another <a> tag. Browsers/HTML renderers don't
+# allow nested anchors, so this collapses the outer tag away and keeps the
+# inner (correctly formed) anchor. Runs repeatedly in case of multiple levels
+# of nesting.
+_NESTED_A_RE = re.compile(
+    r"<a\b[^>]*>((?:(?!</?a\b).)*<a\b[^>]*>.*?</a>(?:(?!</?a\b).)*)</a>",
+    re.DOTALL | re.IGNORECASE,
+)
 
-# Matches any markdown link [text](url)
-_MD_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 
-# Matches bullet / numbered list item lines (-, *, +, or "1.")
-_LIST_ITEM_RE = re.compile(r"^(\s*(?:[-*+]|\d+\.)\s+)")
+def sanitize_html(html: str) -> str:
+    """Clean up LLM-generated HTML before it's served to the app.
 
-
-def sanitize_markdown(md: str) -> str:
-    """Clean up LLM-generated markdown before it's served to the app.
-
-    1) Collapses nested/doubled citation links into a single valid link.
-    2) Strips hyperlinks out of list items entirely (keeping the link text),
-       since react-native-markdown-display overlaps text when a link wraps
-       inside a list item's row-flex bullet layout. Links in normal paragraph
-       text are left untouched and remain clickable.
+    Collapses any nested/doubled <a> tags the model produced despite the
+    prompt into a single valid anchor. Everything else is left as-is — the
+    worker prompt already constrains the model to a small, known-safe set of
+    tags, so no further rewriting is needed.
     """
-    md = _NESTED_LINK_RE.sub(r"[\1](\2)", md)
-
-    out_lines = []
-    for line in md.split("\n"):
-        if _LIST_ITEM_RE.match(line):
-            line = _MD_LINK_RE.sub(r"\1", line)
-        out_lines.append(line)
-    return "\n".join(out_lines)
+    prev = None
+    while prev != html:
+        prev = html
+        html = _NESTED_A_RE.sub(r"\1", html)
+    return html
 
 
 def reducer_node(state: State) -> dict:
     plan = state["plan"]
 
-    ordered_sections = [md for _, md in sorted(state["sections"], key=lambda x: x[0])]
+    ordered_sections = [html for _, html in sorted(state["sections"], key=lambda x: x[0])]
     body = "\n\n".join(ordered_sections).strip()
-    body = sanitize_markdown(body)
-    final_md = f"# {plan.blog_title}\n\n{body}\n" # type: ignore
+    body = sanitize_html(body)
+    final_html = f"<h1>{plan.blog_title}</h1>\n\n{body}\n" # type: ignore
 
     # NOTE: file writing is intentionally NOT done here. The FastAPI route
     # (blogs.py) owns filename generation (slug + uuid) and the blog_files/
-    # output directory, so this node just returns the assembled markdown.
-    return {"final": final_md}
+    # output directory, so this node just returns the assembled HTML.
+    return {"final": final_html}
 
 
 # -----------------------------
