@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     maxWidth: "75%",
     marginRight: 8,
   },
-  userText: { fontSize: 15, color: "#111827" },
+  userText: { fontSize: 18, color: "#111827" },
   userAvatar: {
     alignItems: "center",
     justifyContent: "center",
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    fontSize: 15,
+    fontSize: 18,
     color: "#111827",
   },
   sendButton: {
@@ -337,21 +337,25 @@ const styles = StyleSheet.create({
 // server now generates HTML fragments directly (h2, p, ul/li, a, code, pre).
 const htmlStyles = {
   body: { fontSize: 15, color: "#111827", lineHeight: 22 },
-  p: { marginTop: 0, marginBottom: 10 },
-  h1: { fontSize: 20, fontWeight: "700" as const, marginBottom: 8 },
+  p: { fontSize: 18, marginTop: 0, marginBottom: 10 },
+  h1: { fontSize: 25, fontWeight: "700" as const, marginBottom: 8 },
   h2: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "700" as const,
     marginTop: 10,
     marginBottom: 6,
   },
   h3: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "700" as const,
     marginTop: 8,
     marginBottom: 4,
   },
-  a: { color: "#2563eb", textDecorationLine: "underline" as const },
+  a: {
+    fontSize: 18,
+    color: "#2563eb",
+    textDecorationLine: "underline" as const,
+  },
   code: {
     backgroundColor: "#f3f4f6",
     paddingHorizontal: 4,

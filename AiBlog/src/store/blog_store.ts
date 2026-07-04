@@ -24,6 +24,7 @@ interface MenuState {
 
   updateMenuItem: (id: number, updates: Partial<Omit<MenuItem, "id">>) => void;
   triggerCreateBlogReset: () => void;
+  clearStore: () => Promise<void>;
 }
 
 export const useMenuStore = create<MenuState>()(
@@ -35,6 +36,10 @@ export const useMenuStore = create<MenuState>()(
       triggerCreateBlogReset: () =>
         // NEW
         set((state) => ({ resetKey: state.resetKey + 1 })),
+      clearStore: async () => {
+        set({ menuItems: [], nextId: 1, resetKey: 0 });
+        await AsyncStorage.removeItem("menu-store");
+      },
       addMenuItem: (item) => {
         const newId = get().nextId;
         const newItem: MenuItem = {

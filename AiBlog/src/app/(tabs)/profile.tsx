@@ -7,6 +7,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Button,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
@@ -23,6 +24,7 @@ import {
   SimpleLineIcons,
 } from "@expo/vector-icons";
 import ProfileName from "@/components/ProfileName";
+import { useMenuStore } from "@/store/blog_store";
 
 // Replace with your actual image source
 const AVATAR_URI = "https://cdn-icons-png.flaticon.com/512/3177/3177440.png";
@@ -90,7 +92,9 @@ export default function ProfileScreen() {
     handleResult(result?.assets[0]?.uri);
     setOpenImageModal(false);
   };
-
+  const clearStoreValues = async () => {
+    await useMenuStore.getState().clearStore();
+  };
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <Modal
@@ -169,6 +173,7 @@ export default function ProfileScreen() {
             />
           </TouchableOpacity>
         </View>
+        {/* <Button title="Clear" color="#000000" onPress={clearStoreValues} /> */}
         <TouchableOpacity
           style={styles.signoutBtn}
           activeOpacity={0.85}
