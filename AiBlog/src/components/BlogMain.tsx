@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, memo, useMemo } from "react";
 import {
   View,
   Text,
@@ -45,6 +45,87 @@ interface Props {
   listRef: React.RefObject<FlatList<Message> | null>;
 }
 
+// --- Memoized image grid ------------------------------------------------
+// Recomputes row-chunking only when the `images` array reference changes.
+const ImageGrid = memo(function ImageGrid({
+  images,
+}: {
+  images: string[] | undefined;
+}) {
+  const rows = useMemo(() => {
+    if (!images || images.length === 0) return [];
+    const chunks: string[][] = [];
+    for (let i = 0; i < images.length; i += IMAGE_COLS) {
+      chunks.push(images.slice(i, i + IMAGE_COLS));
+    }
+    return chunks;
+  }, [images]);
+
+  if (rows.length === 0) return null;
+
+  return (
+    <View style={styles.imageGrid}>
+      <Text style={styles.imagesLabel}>Related Images</Text>
+      {rows.map((row, rowIdx) => (
+        <View key={rowIdx} style={styles.imageRow}>
+          {row.map((url, colIdx) => (
+            <Image
+              key={colIdx}
+              source={{ uri: url }}
+              style={[
+                styles.imageBox,
+                { marginLeft: colIdx > 0 ? IMAGE_GAP : 0 },
+              ]}
+              resizeMode="cover"
+              onError={() => {}}
+            />
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+});
+
+// --- Memoized message row -------------------------------------------------
+// React.memo skips re-rendering a row entirely if its `item` reference and
+// `avatarUri` haven't changed, which is what actually silences the
+// "large list slow to update" warning — otherwise every row re-renders
+// (and Markdown re-parses its whole AST) whenever the list re-renders.
+const MessageRow = memo(function MessageRow({
+  item,
+  avatarUri,
+}: {
+  item: Message;
+  avatarUri: string;
+}) {
+  if (item.type === "user") {
+    return (
+      <View style={styles.userRow}>
+        <View style={styles.userBubble}>
+          <Text style={styles.userText}>{item.topic}</Text>
+        </View>
+        <View style={styles.userAvatar}>
+          <Image source={{ uri: avatarUri }} style={styles.avatar} />
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.assistantRow}>
+      <View style={styles.assistantAvatar}>
+        <Ionicons name="sparkles" size={14} color="#fff" />
+      </View>
+      <View style={styles.assistantContent}>
+        <View style={styles.assistantBubble}>
+          <Markdown style={markdownStyles}>{item.markdown}</Markdown>
+        </View>
+        <ImageGrid images={item.images} />
+      </View>
+    </View>
+  );
+});
+
 export default function BlogMain({
   messages,
   handleSend = async () => {},
@@ -55,73 +136,20 @@ export default function BlogMain({
   listRef,
 }: Props) {
   const { user } = useAuthStore();
-  const searchImageGrid = (images: string[] | undefined) => {
-    if (!images || images.length === 0) return null;
 
-    // Group into rows of IMAGE_COLS for reliable pixel-based layout
-    const rows: string[][] = [];
-    for (let i = 0; i < images.length; i += IMAGE_COLS) {
-      rows.push(images.slice(i, i + IMAGE_COLS));
-    }
+  const avatarUri = user?.avatar_url
+    ? `${BASE_URL}${user.avatar_url}`
+    : AVATAR_URI;
 
-    return (
-      <View style={styles.imageGrid}>
-        <Text style={styles.imagesLabel}>Related Images</Text>
-        {rows.map((row, rowIdx) => (
-          <View key={rowIdx} style={styles.imageRow}>
-            {row.map((url, colIdx) => (
-              <Image
-                key={colIdx}
-                source={{ uri: url }}
-                style={[
-                  styles.imageBox,
-                  { marginLeft: colIdx > 0 ? IMAGE_GAP : 0 },
-                ]}
-                resizeMode="cover"
-                onError={() => {}}
-              />
-            ))}
-          </View>
-        ))}
-      </View>
-    );
-  };
+  // Stable, meaningful keys instead of array index — lets FlatList/React
+  // correctly diff items when messages are appended, instead of treating
+  // every row after an insertion point as "changed".
+  const keyExtractor = (item: Message, idx: number) =>
+    item.type === "user" ? `u-${idx}` : `a-${item.path ?? idx}`;
 
-  const userTextAvatar = ({ item }: { item: Message }) => {
-    if (item.type === "user") {
-      return (
-        <View style={styles.userRow}>
-          <View style={styles.userBubble}>
-            <Text style={styles.userText}>{item.topic}</Text>
-          </View>
-          <View style={styles.userAvatar}>
-            <Image
-              source={{
-                uri: user?.avatar_url
-                  ? `${BASE_URL}${user.avatar_url}`
-                  : AVATAR_URI,
-              }}
-              style={styles.avatar}
-            />
-          </View>
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.assistantRow}>
-        <View style={styles.assistantAvatar}>
-          <Ionicons name="sparkles" size={14} color="#fff" />
-        </View>
-        <View style={styles.assistantContent}>
-          <View style={styles.assistantBubble}>
-            <Markdown style={markdownStyles}>{item.markdown}</Markdown>
-          </View>
-          {searchImageGrid(item.images)}
-        </View>
-      </View>
-    );
-  };
+  const renderItem = ({ item }: { item: Message }) => (
+    <MessageRow item={item} avatarUri={avatarUri} />
+  );
 
   return (
     <View style={styles.safeArea}>
@@ -134,12 +162,12 @@ export default function BlogMain({
         <FlatList
           ref={listRef}
           data={messages}
-          keyExtractor={(_, idx) => String(idx)}
-          renderItem={userTextAvatar}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
           contentContainerStyle={styles.listContent}
-          onContentSizeChange={() =>
-            listRef.current?.scrollToEnd({ animated: true })
-          }
+          // onContentSizeChange={() =>
+          //   listRef.current?.scrollToEnd({ animated: false })
+          // }
         />
 
         {loading && (

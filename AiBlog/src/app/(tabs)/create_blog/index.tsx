@@ -95,7 +95,7 @@ export default function CreateBlogScreen() {
       ]);
     } finally {
       setLoading(false);
-      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
+      // setTimeout(() => listRef.current?.scrollToEnd({ animated: false }), 100);
     }
   };
 
