@@ -5,6 +5,7 @@ import re
 import json
 import requests
 from typing import List, Dict, Optional
+from urllib.parse import urlparse
 
 
 def search_google_images(topic: str, max_results: int = 8) -> List[Dict]:
@@ -83,9 +84,20 @@ def search_bing_images(topic: str, max_results: int = 8) -> List[Dict]:
     return results
 
 
+VALID_IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png")
+
+
+def _has_valid_extension(url: Optional[str]) -> bool:
+    """Check whether a URL points to a .jpg/.jpeg/.png file (query strings ignored)."""
+    if not url:
+        return False
+    path = urlparse(url).path.lower()
+    return path.endswith(VALID_IMAGE_EXTENSIONS)
+
 def get_image_urls(topic: str, max_results: int = 8, engine: str = "google") -> List[str]:
     """
-    Returns a flat list of full-size image URLs for the given topic.
+    Returns a flat list of full-size image URLs for the given topic,
+    filtered to only .jpg, .jpeg, or .png links.
     Tries `engine` first (default: google/Serper); falls back to Bing if
     that yields nothing (e.g. missing/invalid API key, no results).
     """
@@ -100,5 +112,8 @@ def get_image_urls(topic: str, max_results: int = 8, engine: str = "google") -> 
         if not results:
             results = search_google_images(topic, max_results=max_results)
 
-    urls: List[str] = [r["url"] for r in results if r.get("url")]
+    urls: List[str] = [
+        r["url"] for r in results
+        if r.get("url") and _has_valid_extension(r["url"])
+    ]
     return urls
