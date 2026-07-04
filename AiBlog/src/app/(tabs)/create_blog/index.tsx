@@ -80,7 +80,6 @@ export default function CreateBlogScreen() {
           path: data.path,
         },
       ]);
-      //! save to local store
       addMenuItem({
         user_topic: trimmedTopic,
         title: data.title,
