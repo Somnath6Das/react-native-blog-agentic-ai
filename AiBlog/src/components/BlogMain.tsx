@@ -16,6 +16,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import RenderHtml from "react-native-render-html";
 import useAuthStore from "@/store/auth_store";
+import { padding } from "@expo/ui/jetpack-compose/modifiers";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const IMAGE_GAP = 8;
@@ -285,11 +286,12 @@ const styles = StyleSheet.create({
   },
   imageRow: {
     flexDirection: "row",
+
     marginBottom: IMAGE_GAP,
   },
   imageBox: {
-    width: IMAGE_SIZE,
-    height: IMAGE_SIZE,
+    width: IMAGE_SIZE + 6,
+    height: IMAGE_SIZE / 1.5,
     borderRadius: 10,
     backgroundColor: "#f3f4f6",
   },
@@ -338,10 +340,11 @@ const styles = StyleSheet.create({
 const htmlStyles = {
   body: { fontSize: 15, color: "#111827", lineHeight: 22 },
   p: { fontSize: 18, marginTop: 0, marginBottom: 10 },
-  h1: { fontSize: 25, fontWeight: "700" as const, marginBottom: 8 },
+  h1: { fontSize: 21, fontWeight: "700" as const, marginBottom: 8 },
   h2: {
     fontSize: 20,
     fontWeight: "700" as const,
+
     marginTop: 10,
     marginBottom: 6,
   },
