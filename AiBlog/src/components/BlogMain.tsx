@@ -20,7 +20,7 @@ import { padding } from "@expo/ui/jetpack-compose/modifiers";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const IMAGE_GAP = 8;
-const IMAGE_COLS = 3;
+const IMAGE_COLS = 2;
 // Subtract: screen padding (16*2) + avatar width (28) + avatar margin (8)
 const GRID_WIDTH = SCREEN_WIDTH - 32 - 36;
 const IMAGE_SIZE = (GRID_WIDTH - IMAGE_GAP * (IMAGE_COLS - 1)) / IMAGE_COLS;
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   imagesLabel: {
-    fontSize: 13,
+    fontSize: 16,
     fontWeight: "600",
     color: "#6b7280",
     marginBottom: 8,
@@ -295,13 +295,13 @@ const styles = StyleSheet.create({
 
     marginBottom: IMAGE_GAP,
   },
+
   imageBox: {
-    width: IMAGE_SIZE + 6,
-    height: IMAGE_SIZE / 1.5,
+    width: IMAGE_SIZE,
+    height: IMAGE_SIZE * 0.75, // square, was IMAGE_SIZE / 1.5 (short & wide)
     borderRadius: 10,
     backgroundColor: "#f3f4f6",
   },
-
   // Loading
   loadingRow: {
     flexDirection: "row",
