@@ -187,6 +187,17 @@ export default function BlogMain({
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
     null,
   );
+  const imagesMessage = messages.find(
+    (m): m is AssistantMessage => m.type === "assistant" && !!m.images?.length,
+  );
+
+  // NOW this line works, because `imagesMessage.images` exists
+  const selectedImageUri =
+    imagesMessage?.images?.[selectedImageIndex ?? 0] ??
+    imagesMessage?.images?.[0] ??
+    null;
+  console.log(selectedImageUri);
+  const publishBlog = () => {};
 
   const avatarUri = user?.avatar_url
     ? `${BASE_URL}${user.avatar_url}`
