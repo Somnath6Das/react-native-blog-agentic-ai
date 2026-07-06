@@ -170,49 +170,55 @@ export default function BlogMain({
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-        {/* Messages — plain ScrollView instead of FlatList. This chat only
-            ever has a couple of items (the topic + the answer), so
-            FlatList's virtualization buys nothing, and its documented
-            tradeoff — content rendered asynchronously offscreen, which can
-            show blank content if you scroll faster than the fill rate — was
-            causing a blank/cut-off flash when scrolling through a long blog
-            post. */}
-        <ScrollView ref={listRef} contentContainerStyle={styles.listContent}>
-          {messages.map((item, idx) => (
-            <MessageRow
-              key={keyExtractor(item, idx)}
-              item={item}
-              avatarUri={avatarUri}
-            />
-          ))}
-        </ScrollView>
-
-        {loading && (
-          <View style={styles.loadingRow}>
-            <ActivityIndicator size="small" color="#16a34a" />
-            <Text style={styles.loadingText}>Generating your blog…</Text>
-          </View>
-        )}
-
-        {/* Input — only shown before a topic has been confirmed */}
-        {!confirmed && (
-          <View style={styles.inputBar}>
-            <TextInput
-              style={styles.input}
-              placeholder="I'd love to know more"
-              placeholderTextColor="#9ca3af"
-              value={topic}
-              onChangeText={setTopic}
-              onSubmitEditing={handleSend}
-              returnKeyType="send"
-            />
-            <TouchableOpacity
-              style={styles.sendButton}
-              onPress={handleSend}
-              disabled={!topic?.trim()}
+        {confirmed ? (
+          <>
+            <ScrollView
+              ref={listRef}
+              contentContainerStyle={styles.listContent}
             >
-              <Ionicons name="send" size={18} color="#fff" />
-            </TouchableOpacity>
+              {messages.map((item, idx) => (
+                <MessageRow
+                  key={keyExtractor(item, idx)}
+                  item={item}
+                  avatarUri={avatarUri}
+                />
+              ))}
+            </ScrollView>
+
+            {loading && (
+              <View style={styles.loadingRow}>
+                <ActivityIndicator size="small" color="#16a34a" />
+                <Text style={styles.loadingText}>Generating your blog…</Text>
+              </View>
+            )}
+          </>
+        ) : (
+          <View style={styles.emptyStateWrapper}>
+            <View style={styles.imageContainer}>
+              <Image
+                source={require("@/assets/agent-img.png")}
+                style={styles.image}
+              />
+            </View>
+
+            <View style={styles.inputBar}>
+              <TextInput
+                style={styles.input}
+                placeholder="I'd love to know more"
+                placeholderTextColor="#9ca3af"
+                value={topic}
+                onChangeText={setTopic}
+                onSubmitEditing={handleSend}
+                returnKeyType="send"
+              />
+              <TouchableOpacity
+                style={styles.sendButton}
+                onPress={handleSend}
+                disabled={!topic?.trim()}
+              >
+                <Ionicons name="send" size={18} color="#fff" />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       </KeyboardAvoidingView>
@@ -306,15 +312,37 @@ const styles = StyleSheet.create({
   },
   loadingText: { color: "#6b7280", fontSize: 13 },
 
-  // Input bar
+  emptyStateWrapper: {
+    flex: 1,
+    position: "relative",
+  },
+
+  imageContainer: {
+    ...StyleSheet.absoluteFill,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  image: {
+    width: 200,
+    height: 200,
+    resizeMode: "contain",
+  },
+
   inputBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: "#e5e7eb",
+    backgroundColor: "#fff",
   },
+
   input: {
     flex: 1,
     backgroundColor: "#f3f4f6",
@@ -324,6 +352,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#111827",
   },
+
   sendButton: {
     width: 38,
     height: 38,
