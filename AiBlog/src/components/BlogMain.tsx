@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, memo, useMemo } from "react";
+import { Dispatch, SetStateAction, memo, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -54,8 +54,12 @@ interface Props {
 // Recomputes row-chunking only when the `images` array reference changes.
 const ImageGrid = memo(function ImageGrid({
   images,
+  selectedIndex,
+  onSelect,
 }: {
   images: string[] | undefined;
+  selectedIndex: number;
+  onSelect: (index: number) => void;
 }) {
   const rows = useMemo(() => {
     if (!images || images.length === 0) return [];
@@ -73,18 +77,38 @@ const ImageGrid = memo(function ImageGrid({
       <Text style={styles.imagesLabel}>Related Images</Text>
       {rows.map((row, rowIdx) => (
         <View key={rowIdx} style={styles.imageRow}>
-          {row.map((url, colIdx) => (
-            <Image
-              key={colIdx}
-              source={{ uri: url }}
-              style={[
-                styles.imageBox,
-                { marginLeft: colIdx > 0 ? IMAGE_GAP : 0 },
-              ]}
-              resizeMode="cover"
-              onError={() => {}}
-            />
-          ))}
+          {row.map((url, colIdx) => {
+            const flatIndex = rowIdx * IMAGE_COLS + colIdx;
+            const isSelected = flatIndex === selectedIndex;
+
+            return (
+              <TouchableOpacity
+                key={colIdx}
+                activeOpacity={0.8}
+                onPress={() => onSelect(flatIndex)}
+                style={{
+                  marginLeft: colIdx > 0 ? IMAGE_GAP : 0,
+                  position: "relative",
+                }}
+              >
+                <Image
+                  source={{ uri: url }}
+                  style={styles.imageBox}
+                  resizeMode="cover"
+                  onError={() => {}}
+                />
+                {isSelected && (
+                  <View style={styles.checkOverlay}>
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={35}
+                      color="#8eff8f"
+                    />
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
       ))}
     </View>
@@ -99,9 +123,13 @@ const ImageGrid = memo(function ImageGrid({
 const MessageRow = memo(function MessageRow({
   item,
   avatarUri,
+  selectedImageIndex,
+  setSelectedImageIndex,
 }: {
   item: Message;
   avatarUri: string;
+  selectedImageIndex: number | null;
+  setSelectedImageIndex: (index: number | null) => void;
 }) {
   if (item.type === "user") {
     return (
@@ -136,7 +164,11 @@ const MessageRow = memo(function MessageRow({
             }}
           />
         </View>
-        <ImageGrid images={item.images} />
+        <ImageGrid
+          images={item.images}
+          selectedIndex={selectedImageIndex ?? 0}
+          onSelect={setSelectedImageIndex}
+        />
       </View>
     </View>
   );
@@ -152,6 +184,9 @@ export default function BlogMain({
   listRef,
 }: Props) {
   const { user } = useAuthStore();
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
+    null,
+  );
 
   const avatarUri = user?.avatar_url
     ? `${BASE_URL}${user.avatar_url}`
@@ -181,6 +216,8 @@ export default function BlogMain({
                   key={keyExtractor(item, idx)}
                   item={item}
                   avatarUri={avatarUri}
+                  selectedImageIndex={selectedImageIndex}
+                  setSelectedImageIndex={setSelectedImageIndex}
                 />
               ))}
             </ScrollView>
@@ -237,6 +274,13 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     justifyContent: "flex-end",
     marginBottom: 16,
+  },
+  checkOverlay: {
+    ...StyleSheet.absoluteFill, // fills the whole image
+    justifyContent: "center",
+    alignItems: "center",
+
+    borderRadius: 11,
   },
   userBubble: {
     backgroundColor: "#f1f3f5",
@@ -302,6 +346,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#f3f4f6",
   },
+
   // Loading
   loadingRow: {
     flexDirection: "row",
