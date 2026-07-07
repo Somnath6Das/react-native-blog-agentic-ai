@@ -208,13 +208,14 @@ export default function BlogMain({
     imagesMessage?.images?.[selectedImageIndex ?? 0] ??
     imagesMessage?.images?.[0] ??
     null;
-  // console.log(selectedImageUri);
 
   const htmlPath = htmlFile?.path;
-  console.log(htmlPath);
 
-  console.log(user?.id);
-  const publishBlog = () => {};
+  const publishBlog = () => {
+    console.log("Blog image:", selectedImageUri);
+    console.log("Blog html:", htmlPath);
+    console.log("user id:", user?.id);
+  };
 
   const avatarUri = user?.avatar_url
     ? `${BASE_URL}${user.avatar_url}`
