@@ -18,6 +18,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import RenderHtml from "react-native-render-html";
 import useAuthStore from "@/store/auth_store";
+import api from "@/utils/api";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const IMAGE_GAP = 8;
@@ -45,6 +46,7 @@ interface Props {
   messages: Message[];
   handleSend?: () => Promise<void>;
   topic?: string;
+  postId?: number;
   setTopic?: Dispatch<SetStateAction<string>>;
   loading?: boolean;
   confirmed?: boolean;
@@ -188,6 +190,7 @@ export default function BlogMain({
   messages,
   handleSend = async () => {},
   topic,
+  postId,
   setTopic = () => {},
   loading = false,
   confirmed = false,
@@ -211,10 +214,21 @@ export default function BlogMain({
 
   const htmlPath = htmlFile?.path;
 
-  const publishBlog = () => {
-    console.log("Blog image:", selectedImageUri);
-    console.log("Blog html:", htmlPath);
-    console.log("user id:", user?.id);
+  const publishBlog = async () => {
+    // try {
+    //   const res = await api.post("/public/create", {
+    //     userId: user?.id,
+    //     postId,
+    //     htmlPath,
+    //     image: selectedImageUri,
+    //   });
+    // } catch (error) {
+    //   console.error(error);
+    // }
+    console.log(user?.id);
+    console.log(postId);
+    console.log(htmlPath);
+    console.log(selectedImageUri);
   };
 
   const avatarUri = user?.avatar_url

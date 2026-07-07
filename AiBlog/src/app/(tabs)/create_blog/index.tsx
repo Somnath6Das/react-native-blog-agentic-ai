@@ -31,6 +31,7 @@ export default function CreateBlogScreen() {
   const [loading, setLoading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const listRef = useRef<ScrollView | null>(null);
+  const [postId, setPostId] = useState<number | undefined>(undefined);
   useFocusEffect(
     useCallback(() => {
       setTopic("");
@@ -79,12 +80,13 @@ export default function CreateBlogScreen() {
           path: data.path,
         },
       ]);
-      addMenuItem({
+      const newId = addMenuItem({
         user_topic: trimmedTopic,
         title: data.title,
         file_path: data.path,
         images: data.images || [],
       });
+      setPostId(newId);
     } catch (err: any) {
       const detail =
         err?.response?.data?.detail || err.message || "Something went wrong.";
@@ -102,6 +104,7 @@ export default function CreateBlogScreen() {
     <BlogMain
       messages={messages}
       handleSend={handleSend}
+      postId={postId}
       topic={topic}
       setTopic={setTopic}
       loading={loading}

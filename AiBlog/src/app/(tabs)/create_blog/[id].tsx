@@ -78,6 +78,7 @@ const LocalBlogPage = () => {
         loading={loading}
         confirmed={true}
         listRef={listRef}
+        postId={Number(id)}
       />
     </View>
   );
