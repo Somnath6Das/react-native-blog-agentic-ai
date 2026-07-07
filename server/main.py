@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import uvicorn
 import src.database.user.models as models
 from src.database.database import engine
-from src.routes import auth, profile, blogs
+from src.routes import auth, profile, blogs, public
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -31,6 +31,8 @@ app.include_router(blogs.router)
 # Serves image file saved in UPLOAD_DIR at http://<host>/uploads/<filename>
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.include_router(profile.router)
+
+app.include_router(public.router)
 
 @app.get("/")
 def read_root():

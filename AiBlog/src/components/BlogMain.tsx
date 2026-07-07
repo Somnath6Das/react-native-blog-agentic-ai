@@ -215,20 +215,16 @@ export default function BlogMain({
   const htmlPath = htmlFile?.path;
 
   const publishBlog = async () => {
-    // try {
-    //   const res = await api.post("/public/create", {
-    //     userId: user?.id,
-    //     postId,
-    //     htmlPath,
-    //     image: selectedImageUri,
-    //   });
-    // } catch (error) {
-    //   console.error(error);
-    // }
-    console.log(user?.id);
-    console.log(postId);
-    console.log(htmlPath);
-    console.log(selectedImageUri);
+    try {
+      const res = await api.post("/public/create", {
+        userId: user?.id,
+        postId,
+        htmlPath,
+        image: selectedImageUri,
+      });
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const avatarUri = user?.avatar_url
