@@ -13,12 +13,11 @@ import {
   Platform,
   Dimensions,
   Linking,
+  Button,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import RenderHtml from "react-native-render-html";
 import useAuthStore from "@/store/auth_store";
-import { padding } from "@expo/ui/jetpack-compose/modifiers";
-import { Button } from "@expo/ui";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const IMAGE_GAP = 8;
@@ -127,11 +126,13 @@ const MessageRow = memo(function MessageRow({
   avatarUri,
   selectedImageIndex,
   setSelectedImageIndex,
+  publishBlog,
 }: {
   item: Message;
   avatarUri: string;
   selectedImageIndex: number | null;
   setSelectedImageIndex: (index: number | null) => void;
+  publishBlog: () => void;
 }) {
   if (item.type === "user") {
     return (
@@ -147,30 +148,37 @@ const MessageRow = memo(function MessageRow({
   }
 
   return (
-    <View style={styles.assistantRow}>
-      <View style={styles.assistantAvatar}>
-        <Ionicons name="sparkles" size={14} color="#fff" />
+    <View>
+      <View style={styles.assistant}>
+        <TouchableOpacity style={styles.publishButton} onPress={publishBlog}>
+          <Text style={styles.publishButtonText}>Publish Blog</Text>
+        </TouchableOpacity>
       </View>
-      <View style={styles.assistantContent}>
-        <View style={styles.assistantBubble}>
-          <RenderHtml
-            contentWidth={HTML_CONTENT_WIDTH}
-            source={{ html: item.html }}
-            tagsStyles={htmlStyles}
-            renderersProps={{
-              a: {
-                onPress: (_event, href) => {
-                  if (href) Linking.openURL(href);
+      <View style={styles.assistantRow}>
+        <View style={styles.assistantAvatar}>
+          <Ionicons name="sparkles" size={14} color="#fff" />
+        </View>
+        <View style={styles.assistantContent}>
+          <View style={styles.assistantBubble}>
+            <RenderHtml
+              contentWidth={HTML_CONTENT_WIDTH}
+              source={{ html: item.html }}
+              tagsStyles={htmlStyles}
+              renderersProps={{
+                a: {
+                  onPress: (_event, href) => {
+                    if (href) Linking.openURL(href);
+                  },
                 },
-              },
-            }}
+              }}
+            />
+          </View>
+          <ImageGrid
+            images={item.images}
+            selectedIndex={selectedImageIndex ?? 0}
+            onSelect={setSelectedImageIndex}
           />
         </View>
-        <ImageGrid
-          images={item.images}
-          selectedIndex={selectedImageIndex ?? 0}
-          onSelect={setSelectedImageIndex}
-        />
       </View>
     </View>
   );
@@ -238,6 +246,7 @@ export default function BlogMain({
                   avatarUri={avatarUri}
                   selectedImageIndex={selectedImageIndex}
                   setSelectedImageIndex={setSelectedImageIndex}
+                  publishBlog={publishBlog}
                 />
               ))}
             </ScrollView>
@@ -324,6 +333,21 @@ const styles = StyleSheet.create({
   userAvatarText: { color: "#fff", fontWeight: "700", fontSize: 12 },
 
   // Assistant bubble
+  assistant: { alignItems: "center", marginBottom: 7 },
+  publishButton: {
+    width: 120,
+    height: 30,
+    backgroundColor: "#2f5fef",
+    borderRadius: 8,
+
+    justifyContent: "center",
+  },
+  publishButtonText: {
+    color: "#fff",
+    alignSelf: "center",
+    fontSize: 16,
+    fontWeight: 600,
+  },
   assistantRow: { flexDirection: "row", marginBottom: 16 },
   assistantAvatar: {
     width: 28,
