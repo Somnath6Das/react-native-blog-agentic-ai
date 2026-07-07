@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, memo, useMemo, useState } from "react";
 import {
+  Alert,
   View,
   Text,
   TextInput,
@@ -17,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import RenderHtml from "react-native-render-html";
 import useAuthStore from "@/store/auth_store";
 import { padding } from "@expo/ui/jetpack-compose/modifiers";
+import { Button } from "@expo/ui";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const IMAGE_GAP = 8;
@@ -190,13 +192,20 @@ export default function BlogMain({
   const imagesMessage = messages.find(
     (m): m is AssistantMessage => m.type === "assistant" && !!m.images?.length,
   );
-
+  const htmlFile = messages.find(
+    (m): m is AssistantMessage => m.type === "assistant",
+  );
   // NOW this line works, because `imagesMessage.images` exists
   const selectedImageUri =
     imagesMessage?.images?.[selectedImageIndex ?? 0] ??
     imagesMessage?.images?.[0] ??
     null;
-  console.log(selectedImageUri);
+  // console.log(selectedImageUri);
+
+  const htmlPath = htmlFile?.path;
+  console.log(htmlPath);
+
+  console.log(user?.id);
   const publishBlog = () => {};
 
   const avatarUri = user?.avatar_url
