@@ -19,25 +19,26 @@ router = APIRouter(prefix="/public", tags=["public"])
 class BlogRequest(BaseModel):
     userId: int
     postId:int
+    title: str 
     htmlPath: str  # e.g. "blog_files/fine-tuning-in-2026-ab12cd.html"
     image: str  # array of full-size image URLs
 
 @router.post("/create")
 async def create_blog(body: BlogRequest, db: Session = Depends(get_db)):
     if not body.userId or not body.postId or not body.htmlPath or not body.image:
-        raise HTTPException(status_code=422, detail="id, path and image not be empty.")
+        raise HTTPException(status_code=422, detail="id,title, htmlpath and image not be empty.")
     
     try:
         stmt = insert(Blog).values(
         user_id=body.userId,
         post_id=body.postId,
+        title=body.title,
         html_path=body.htmlPath,
         image=body.image,
         ).on_conflict_do_update(
         index_elements=["user_id", "post_id"],
-        set_={"html_path": body.htmlPath, "image": body.image},
+        set_={"image": body.image},
         ).returning(Blog)
-
         result = db.execute(stmt)
         db.commit()
         result.scalar_one()

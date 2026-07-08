@@ -9,8 +9,9 @@ class Blog(Base):
     __tablename__ = "blogs"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(Integer, index=True)  # remove unique=True here
+    user_id: Mapped[int] = mapped_column(Integer, index=True)
     post_id: Mapped[int] = mapped_column(Integer, index=True)
+    title: Mapped[str] = mapped_column(String)
     html_path: Mapped[str] = mapped_column(String)
     image: Mapped[str] = mapped_column(String)
 

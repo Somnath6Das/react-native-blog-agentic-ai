@@ -42,17 +42,6 @@ const BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
 // Replace with your actual image source
 const AVATAR_URI = "https://cdn-icons-png.flaticon.com/512/3177/3177440.png";
 
-interface Props {
-  messages: Message[];
-  handleSend?: () => Promise<void>;
-  topic?: string;
-  postId?: number;
-  setTopic?: Dispatch<SetStateAction<string>>;
-  loading?: boolean;
-  confirmed?: boolean;
-  listRef: React.RefObject<ScrollView | null>;
-}
-
 // --- Memoized image grid ------------------------------------------------
 // Recomputes row-chunking only when the `images` array reference changes.
 const ImageGrid = memo(function ImageGrid({
@@ -175,6 +164,14 @@ const MessageRow = memo(function MessageRow({
               }}
             />
           </View>
+          <View style={styles.assistant}>
+            <TouchableOpacity
+              style={styles.publishButton}
+              onPress={publishBlog}
+            >
+              <Text style={styles.publishButtonText}>Publish Blog</Text>
+            </TouchableOpacity>
+          </View>
           <ImageGrid
             images={item.images}
             selectedIndex={selectedImageIndex ?? 0}
@@ -186,9 +183,22 @@ const MessageRow = memo(function MessageRow({
   );
 });
 
+interface Props {
+  messages: Message[];
+  handleSend?: () => Promise<void>;
+  title: string;
+  topic?: string;
+  postId?: number;
+  setTopic?: Dispatch<SetStateAction<string>>;
+  loading?: boolean;
+  confirmed?: boolean;
+  listRef: React.RefObject<ScrollView | null>;
+}
+
 export default function BlogMain({
   messages,
   handleSend = async () => {},
+  title,
   topic,
   postId,
   setTopic = () => {},
@@ -219,6 +229,7 @@ export default function BlogMain({
       const res = await api.post("/public/create", {
         userId: user?.id,
         postId,
+        title,
         htmlPath,
         image: selectedImageUri,
       });
@@ -264,7 +275,7 @@ export default function BlogMain({
 
             {loading && (
               <View style={styles.loadingRow}>
-                <ActivityIndicator size="small" color="#16a34a" />
+                <ActivityIndicator size="small" color="#0d622c" />
                 <Text style={styles.loadingText}>Generating your blog…</Text>
               </View>
             )}
@@ -344,10 +355,11 @@ const styles = StyleSheet.create({
   userAvatarText: { color: "#fff", fontWeight: "700", fontSize: 12 },
 
   // Assistant bubble
-  assistant: { alignItems: "center", marginBottom: 7 },
+  assistant: { alignItems: "center", marginTop: 4, marginBottom: 4 },
   publishButton: {
     width: 120,
     height: 30,
+
     backgroundColor: "#2f5fef",
     borderRadius: 8,
 

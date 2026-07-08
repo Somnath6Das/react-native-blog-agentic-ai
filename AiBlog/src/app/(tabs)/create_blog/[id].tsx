@@ -75,6 +75,7 @@ const LocalBlogPage = () => {
       <Stack.Screen options={{ title: item.title }} />
       <BlogMain
         messages={messages}
+        title={item.title}
         loading={loading}
         confirmed={true}
         listRef={listRef}

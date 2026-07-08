@@ -82,6 +82,7 @@ const RootLayout = () => {
       <Stack.Screen name="index" />
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
+      {/* post details page */}
       <Stack.Screen
         name="post/[id]"
         options={{

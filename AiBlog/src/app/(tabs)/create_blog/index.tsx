@@ -32,6 +32,8 @@ export default function CreateBlogScreen() {
   const [confirmed, setConfirmed] = useState(false);
   const listRef = useRef<ScrollView | null>(null);
   const [postId, setPostId] = useState<number | undefined>(undefined);
+  const [title, setTitle] = useState<string>("");
+
   useFocusEffect(
     useCallback(() => {
       setTopic("");
@@ -63,6 +65,7 @@ export default function CreateBlogScreen() {
         { topic: trimmedTopic },
         { timeout: 90000 },
       );
+
       // data: { title, path, images }
 
       // Fetch the generated HTML content served as a static file from FastAPI:
@@ -86,6 +89,7 @@ export default function CreateBlogScreen() {
         file_path: data.path,
         images: data.images || [],
       });
+      setTitle(data.title);
       setPostId(newId);
     } catch (err: any) {
       const detail =
@@ -105,6 +109,7 @@ export default function CreateBlogScreen() {
       messages={messages}
       handleSend={handleSend}
       postId={postId}
+      title={title}
       topic={topic}
       setTopic={setTopic}
       loading={loading}
