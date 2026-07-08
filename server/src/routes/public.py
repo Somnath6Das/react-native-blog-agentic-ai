@@ -9,6 +9,8 @@ from src.database.database import engine, get_db
 from pydantic import BaseModel
 from src.database.public_blog.models import Blog
 from sqlalchemy import select
+import traceback
+from sqlalchemy.dialects.postgresql import insert
 
 
 router = APIRouter(prefix="/public", tags=["public"])
@@ -25,28 +27,21 @@ async def create_blog(body: BlogRequest, db: Session = Depends(get_db)):
     if not body.userId or not body.postId or not body.htmlPath or not body.image:
         raise HTTPException(status_code=422, detail="id, path and image not be empty.")
     
-    result = db.execute(
-         select(Blog).where(
-            Blog.user_id == body.userId,
-            Blog.post_id == body.postId,
-        )
-    )
-    existing_blog = result.scalar_one_or_none()
+    try:
+        stmt = insert(Blog).values(
+        user_id=body.userId,
+        post_id=body.postId,
+        html_path=body.htmlPath,
+        image=body.image,
+        ).on_conflict_do_update(
+        index_elements=["user_id", "post_id"],
+        set_={"html_path": body.htmlPath, "image": body.image},
+        ).returning(Blog)
 
-    if not existing_blog:
-        new_blog = Blog(
-            user_id=body.userId,
-            post_id=body.postId,
-            html_path=body.htmlPath,
-            image=body.image,
-        )
-        db.add(new_blog)
+        result = db.execute(stmt)
         db.commit()
-        db.refresh(new_blog)
-        return new_blog
-    else:
-        existing_blog.html_path = body.htmlPath # type: ignore
-        existing_blog.image = body.image # type: ignore
-        db.commit()
-        db.refresh(existing_blog)
-        return existing_blog
+        result.scalar_one()
+
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
