@@ -11,7 +11,8 @@ from src.database.public_blog.models import Blog
 from sqlalchemy import select
 import traceback
 from sqlalchemy.dialects.postgresql import insert
-
+from datetime import datetime
+from sqlalchemy import select, desc
 
 router = APIRouter(prefix="/public", tags=["public"])
 
@@ -22,6 +23,9 @@ class BlogRequest(BaseModel):
     title: str 
     htmlPath: str  # e.g. "blog_files/fine-tuning-in-2026-ab12cd.html"
     image: str  # array of full-size image URLs
+
+
+
 
 @router.post("/create")
 async def create_blog(body: BlogRequest, db: Session = Depends(get_db)):
@@ -46,3 +50,24 @@ async def create_blog(body: BlogRequest, db: Session = Depends(get_db)):
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+class BlogResponse(BaseModel):
+    id: int
+    user_id: int
+    post_id:int
+    title: str
+    html_path:str
+    image:str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+    
+@router.get("/blogs", response_model=List[BlogResponse])
+def get_all_blogs(db: Session = Depends(get_db)):
+    result = db.execute(
+        select(Blog).order_by(desc(Blog.created_at))
+    )
+    blogs = result.scalars().all()
+    return blogs

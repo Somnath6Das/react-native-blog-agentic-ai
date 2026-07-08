@@ -114,12 +114,14 @@ const ImageGrid = memo(function ImageGrid({
 // (and RenderHtml re-parses its whole DOM tree) whenever the list re-renders.
 const MessageRow = memo(function MessageRow({
   item,
+
   avatarUri,
   selectedImageIndex,
   setSelectedImageIndex,
   publishBlog,
 }: {
   item: Message;
+
   avatarUri: string;
   selectedImageIndex: number | null;
   setSelectedImageIndex: (index: number | null) => void;
@@ -211,6 +213,7 @@ export default function BlogMain({
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
     null,
   );
+
   const imagesMessage = messages.find(
     (m): m is AssistantMessage => m.type === "assistant" && !!m.images?.length,
   );
@@ -227,7 +230,7 @@ export default function BlogMain({
 
   const publishBlog = async () => {
     try {
-      const res = await api.post("/public/create", {
+      await api.post("/public/create", {
         userId: user?.id,
         postId,
         title,
