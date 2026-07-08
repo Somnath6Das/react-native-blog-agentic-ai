@@ -147,7 +147,7 @@ const MessageRow = memo(function MessageRow({
       </View>
       <View style={styles.assistantRow}>
         <View style={styles.assistantAvatar}>
-          <Ionicons name="sparkles" size={14} color="#fff" />
+          <Ionicons name="sparkles" size={14} color="#ffffff" />
         </View>
         <View style={styles.assistantContent}>
           <View style={styles.assistantBubble}>
@@ -171,12 +171,13 @@ const MessageRow = memo(function MessageRow({
             >
               <Text style={styles.publishButtonText}>Publish Blog</Text>
             </TouchableOpacity>
+
+            <ImageGrid
+              images={item.images}
+              selectedIndex={selectedImageIndex ?? 0}
+              onSelect={setSelectedImageIndex}
+            />
           </View>
-          <ImageGrid
-            images={item.images}
-            selectedIndex={selectedImageIndex ?? 0}
-            onSelect={setSelectedImageIndex}
-          />
         </View>
       </View>
     </View>
