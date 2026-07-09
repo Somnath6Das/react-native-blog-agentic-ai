@@ -5,7 +5,7 @@ import api from "@/utils/api";
 import { useMenuStore } from "@/store/blog_store";
 import { useFocusEffect } from "expo-router";
 import useAuthStore from "@/store/auth_store";
-import BlogMain from "@/components/BlogMain";
+import BlogMain from "@/components/blog_create/BlogMain";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const IMAGE_GAP = 8;

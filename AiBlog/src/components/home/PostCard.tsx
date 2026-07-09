@@ -1,19 +1,13 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
+import React from "react";
+import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-} from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, FONTS, RADIUS, SHADOWS, SPACING } from '../constants/theme';
-import type { Post } from '../data/posts';
+} from "react-native-reanimated";
+import { Ionicons } from "@expo/vector-icons";
+import { COLORS, FONTS, RADIUS, SHADOWS, SPACING } from "../../constants/theme";
+import type { Post } from "../../data/posts";
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -33,14 +27,20 @@ export default function PostCard({ post, onPress }: Props) {
     <AnimatedTouchable
       style={[styles.card, animatedStyle]}
       onPress={onPress}
-      onPressIn={() => { scale.value = withSpring(0.97, { damping: 15, stiffness: 300 }); }}
-      onPressOut={() => { scale.value = withSpring(1, { damping: 15, stiffness: 300 }); }}
+      onPressIn={() => {
+        scale.value = withSpring(0.97, { damping: 15, stiffness: 300 });
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1, { damping: 15, stiffness: 300 });
+      }}
       activeOpacity={1}
     >
       <Image source={{ uri: post.imageUrl }} style={styles.image} />
       <View style={styles.info}>
         <Text style={styles.category}>{post.category}</Text>
-        <Text style={styles.title} numberOfLines={2}>{post.title}</Text>
+        <Text style={styles.title} numberOfLines={2}>
+          {post.title}
+        </Text>
         <View style={styles.meta}>
           <Ionicons name="time-outline" size={12} color={COLORS.gray500} />
           <Text style={styles.metaText}>{post.readTime}</Text>
@@ -55,8 +55,8 @@ export default function PostCard({ post, onPress }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: SPACING.md,
     backgroundColor: COLORS.white,
     borderRadius: RADIUS.md,
@@ -67,12 +67,12 @@ const styles = StyleSheet.create({
     width: 90,
     height: 80,
     borderRadius: RADIUS.md,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   info: {
     flex: 1,
     paddingLeft: SPACING.md,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   category: {
     ...FONTS.label,
@@ -87,8 +87,8 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
   meta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   metaText: {

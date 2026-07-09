@@ -2,7 +2,7 @@ import { View, Text, ActivityIndicator, ScrollView } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocalSearchParams, Stack } from "expo-router";
 import { useMenuStore } from "@/store/blog_store";
-import BlogMain from "@/components/BlogMain";
+import BlogMain from "@/components/blog_create/BlogMain";
 import api from "@/utils/api";
 
 type UserMessage = { type: "user"; topic: string };

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-} from 'react-native';
+} from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -17,10 +17,17 @@ import Animated, {
   Extrapolation,
   useAnimatedReaction,
   cancelAnimation,
-} from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { COLORS, FONTS, RADIUS, SHADOWS, SPACING, SCREEN_WIDTH } from '../constants/theme';
-import type { Post } from '../data/posts';
+} from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import {
+  COLORS,
+  FONTS,
+  RADIUS,
+  SHADOWS,
+  SPACING,
+  SCREEN_WIDTH,
+} from "../../constants/theme";
+import type { Post } from "../../data/posts";
 
 const CARD_HEIGHT = SCREEN_WIDTH < 375 ? 220 : SCREEN_WIDTH < 428 ? 260 : 300;
 const CARD_WIDTH = SCREEN_WIDTH - SPACING.md * 2;
@@ -45,18 +52,21 @@ export default function FeaturedCarousel({ posts, onPress }: Props) {
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const goTo = useCallback((index: number, animated = true) => {
-    const clamped = ((index % count) + count) % count;
-    currentIndex.value = clamped;
-    translateX.value = animated
-      ? withSpring(-clamped * CARD_WIDTH, {
-          damping: 20,
-          stiffness: 200,
-          mass: 0.8,
-        })
-      : -clamped * CARD_WIDTH;
-    setActiveIndex(clamped);
-  }, [count]);
+  const goTo = useCallback(
+    (index: number, animated = true) => {
+      const clamped = ((index % count) + count) % count;
+      currentIndex.value = clamped;
+      translateX.value = animated
+        ? withSpring(-clamped * CARD_WIDTH, {
+            damping: 20,
+            stiffness: 200,
+            mass: 0.8,
+          })
+        : -clamped * CARD_WIDTH;
+      setActiveIndex(clamped);
+    },
+    [count],
+  );
 
   // Auto-play
   const startAutoPlay = useCallback(() => {
@@ -134,7 +144,10 @@ export default function FeaturedCarousel({ posts, onPress }: Props) {
         {posts.map((_, i) => (
           <TouchableOpacity
             key={i}
-            onPress={() => { goTo(i); startAutoPlay(); }}
+            onPress={() => {
+              goTo(i);
+              startAutoPlay();
+            }}
             hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
           >
             <DotIndicator index={i} activeIndex={activeIndex} />
@@ -179,9 +192,13 @@ function SlideItem({
         <View style={styles.overlayTop} />
         <View style={styles.overlayBottom} />
         <View style={styles.content}>
-          <Text style={styles.title} numberOfLines={2}>{post.title}</Text>
+          <Text style={styles.title} numberOfLines={2}>
+            {post.title}
+          </Text>
           {post.subtitle && (
-            <Text style={styles.subtitle} numberOfLines={1}>{post.subtitle}</Text>
+            <Text style={styles.subtitle} numberOfLines={1}>
+              {post.subtitle}
+            </Text>
           )}
         </View>
       </TouchableOpacity>
@@ -190,32 +207,35 @@ function SlideItem({
 }
 
 // Animated dot
-function DotIndicator({ index, activeIndex }: { index: number; activeIndex: number }) {
+function DotIndicator({
+  index,
+  activeIndex,
+}: {
+  index: number;
+  activeIndex: number;
+}) {
   const isActive = index === activeIndex;
   return (
     <Animated.View
-      style={[
-        styles.dot,
-        isActive ? styles.dotActive : styles.dotInactive,
-      ]}
+      style={[styles.dot, isActive ? styles.dotActive : styles.dotInactive]}
     />
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: {
-    width: '100%',
+    width: "100%",
     marginBottom: SPACING.lg,
   },
   clipper: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderRadius: RADIUS.lg,
     ...SHADOWS.strong,
   },
   strip: {
-    flexDirection: 'row',
+    flexDirection: "row",
     width: CARD_WIDTH * 100, // large enough
     height: CARD_HEIGHT,
   },
@@ -224,35 +244,35 @@ const styles = StyleSheet.create({
     height: CARD_HEIGHT,
   },
   card: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: RADIUS.lg,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   image: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-    resizeMode: 'cover',
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+    resizeMode: "cover",
   },
   overlayTop: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    height: '40%',
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    height: "40%",
+    backgroundColor: "rgba(0,0,0,0.1)",
   },
   overlayBottom: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    height: '55%',
-    backgroundColor: 'rgba(0,0,0,0.52)',
+    height: "55%",
+    backgroundColor: "rgba(0,0,0,0.52)",
   },
   content: {
-    position: 'absolute',
+    position: "absolute",
     bottom: SPACING.md,
     left: SPACING.md,
     right: SPACING.md,
@@ -260,20 +280,20 @@ const styles = StyleSheet.create({
   title: {
     ...FONTS.displayLG,
     color: COLORS.white,
-    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowColor: "rgba(0,0,0,0.4)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
   subtitle: {
     ...FONTS.bodyMD,
-    color: 'rgba(255,255,255,0.85)',
+    color: "rgba(255,255,255,0.85)",
     marginTop: 3,
   },
   // Dots
   dots: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     gap: 6,
     marginTop: SPACING.sm,
   },

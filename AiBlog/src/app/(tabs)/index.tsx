@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Platform,
   ScrollView,
@@ -9,27 +9,66 @@ import {
   Text,
   TouchableOpacity,
   View,
+  RefreshControl,
 } from "react-native";
 
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FeaturedCarousel from "@/components/FeaturedCard";
-import PostCard from "@/components/PostCard";
+import FeaturedCarousel from "@/components/home/FeaturedCard";
+import PostCard from "@/components/home/PostCard";
 import { COLORS, FONTS, SPACING } from "@/constants/theme";
 import type { Post } from "@/data/posts";
 import { POSTS } from "@/data/posts";
+import { Blog, getPublicBlogs } from "@/utils/get_public_blogs";
+import axios from "axios";
 
 const popular = POSTS.filter((p) => !p.featured);
 
 export default function HomeScreen() {
   const router = useRouter();
   const [animKey, setAnimKey] = useState(0);
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       setAnimKey((k) => k + 1);
     }, []),
   );
+
+  const fetchBlogs = async () => {
+    try {
+      const data = await getPublicBlogs();
+      // console.log(data);
+      setBlogs(data);
+      setError(null);
+    } catch (err) {
+      setError(
+        axios.isAxiosError(err)
+          ? (err.response?.data?.detail ?? "Failed to load blogs")
+          : "Something went wrong",
+      );
+      console.error(err);
+    }
+  };
+
+  // runs once, on first mount
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      await fetchBlogs();
+      setLoading(false);
+    })();
+  }, []);
+
+  // runs only when user pulls to refresh
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchBlogs();
+    setRefreshing(false);
+  }, []);
 
   const goToPost = useCallback(
     (post: Post) => {
@@ -40,24 +79,22 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Header */}
-      <Animated.View
-        key={`header-${animKey}`}
-        entering={FadeInDown.duration(400).delay(50)}
-        style={styles.header}
-      >
-        <Text style={styles.brand}>OUTDOOR</Text>
-      </Animated.View>
-
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
-        bounces
-        overScrollMode="always"
-        scrollEventThrottle={16}
-        // Allow carousel's horizontal pan to win over vertical scroll
-        nestedScrollEnabled
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
+        {/* Header */}
+        <Animated.View
+          key={`header-${animKey}`}
+          entering={FadeInDown.duration(400).delay(50)}
+          style={styles.header}
+        >
+          <Text style={styles.brand}>OUTDOOR</Text>
+        </Animated.View>
+
         {/* Journal heading */}
         <Animated.Text
           key={`journal-${animKey}`}

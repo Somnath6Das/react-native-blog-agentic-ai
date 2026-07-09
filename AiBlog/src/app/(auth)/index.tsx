@@ -1,4 +1,4 @@
-import OtpField from "@/components/OtpField";
+import OtpField from "@/components/auth/OtpField";
 import { router } from "expo-router";
 import { useState } from "react";
 import {

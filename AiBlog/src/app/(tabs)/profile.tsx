@@ -23,7 +23,7 @@ import {
   Ionicons,
   SimpleLineIcons,
 } from "@expo/vector-icons";
-import ProfileName from "@/components/ProfileName";
+import ProfileName from "@/components/profile/ProfileName";
 import { useMenuStore } from "@/store/blog_store";
 
 // Replace with your actual image source
