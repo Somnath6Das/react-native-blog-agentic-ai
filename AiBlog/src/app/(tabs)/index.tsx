@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   Platform,
@@ -24,25 +24,29 @@ import axios from "axios";
 
 const popular = POSTS.filter((p) => !p.featured);
 
+// Module-level flag: survives component unmount/remount, only resets
+// when the JS runtime restarts (i.e. a real fresh app launch/reload).
+let hasPlayedIntroAnimation = false;
+
 export default function HomeScreen() {
   const router = useRouter();
-  const [animKey, setAnimKey] = useState(0);
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useFocusEffect(
-    useCallback(() => {
-      setAnimKey((k) => k + 1);
-    }, []),
-  );
+  // Decide once, on first mount of this instance, whether to animate.
+  const [shouldAnimate] = useState(() => {
+    if (hasPlayedIntroAnimation) return false;
+    hasPlayedIntroAnimation = true;
+    return true;
+  });
 
   const fetchBlogs = async () => {
     try {
       const data = await getPublicBlogs();
-      // console.log(data);
       setBlogs(data);
+      console.log(data);
       setError(null);
     } catch (err) {
       setError(
@@ -54,7 +58,6 @@ export default function HomeScreen() {
     }
   };
 
-  // runs once, on first mount
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -63,7 +66,6 @@ export default function HomeScreen() {
     })();
   }, []);
 
-  // runs only when user pulls to refresh
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchBlogs();
@@ -88,8 +90,9 @@ export default function HomeScreen() {
       >
         {/* Header */}
         <Animated.View
-          key={`header-${animKey}`}
-          entering={FadeInDown.duration(400).delay(50)}
+          entering={
+            shouldAnimate ? FadeInDown.duration(400).delay(50) : undefined
+          }
           style={styles.header}
         >
           <Text style={styles.brand}>OUTDOOR</Text>
@@ -97,8 +100,9 @@ export default function HomeScreen() {
 
         {/* Journal heading */}
         <Animated.Text
-          key={`journal-${animKey}`}
-          entering={FadeInDown.duration(400).delay(100)}
+          entering={
+            shouldAnimate ? FadeInDown.duration(400).delay(100) : undefined
+          }
           style={styles.sectionTitle}
         >
           Journal
@@ -106,16 +110,18 @@ export default function HomeScreen() {
 
         {/* Carousel — all posts */}
         <Animated.View
-          key={`carousel-${animKey}`}
-          entering={FadeInDown.duration(500).delay(150)}
+          entering={
+            shouldAnimate ? FadeInDown.duration(500).delay(150) : undefined
+          }
         >
           <FeaturedCarousel posts={POSTS} onPress={goToPost} />
         </Animated.View>
 
         {/* Popular header */}
         <Animated.View
-          key={`popular-${animKey}`}
-          entering={FadeInDown.duration(400).delay(220)}
+          entering={
+            shouldAnimate ? FadeInDown.duration(400).delay(220) : undefined
+          }
           style={styles.popularHeader}
         >
           <Text style={styles.sectionTitle}>Popular</Text>
@@ -127,8 +133,12 @@ export default function HomeScreen() {
         {/* Popular list */}
         {popular.map((post, idx) => (
           <Animated.View
-            key={`${post.id}-${animKey}`}
-            entering={FadeInDown.duration(400).delay(280 + idx * 80)}
+            key={post.id}
+            entering={
+              shouldAnimate
+                ? FadeInDown.duration(400).delay(280 + idx * 80)
+                : undefined
+            }
           >
             <PostCard post={post} onPress={() => goToPost(post)} />
           </Animated.View>

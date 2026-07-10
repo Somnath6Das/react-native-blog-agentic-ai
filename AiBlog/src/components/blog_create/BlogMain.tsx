@@ -17,6 +17,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import RenderHtml from "react-native-render-html";
+// ✅ NEW — needed for the one-time entrance animation
+import Animated, { FadeInDown } from "react-native-reanimated";
 import useAuthStore from "@/store/auth_store";
 import api from "@/utils/api";
 
@@ -29,6 +31,11 @@ const IMAGE_SIZE = (GRID_WIDTH - IMAGE_GAP * (IMAGE_COLS - 1)) / IMAGE_COLS;
 // Content width for RenderHtml: safeArea padding (5*2) + avatar (28) +
 // avatar margin (8) + bubble padding (14*2)
 const HTML_CONTENT_WIDTH = SCREEN_WIDTH - 74;
+
+// ✅ NEW — module-level flag, survives this component unmounting/remounting
+// (e.g. CreateBlogScreen's useFocusEffect resetting state on every focus).
+// Only resets to false on a true app restart / JS bundle reload.
+let hasPlayedCreateBlogIntro = false;
 
 type UserMessage = { type: "user"; topic: string };
 type AssistantMessage = {
@@ -94,7 +101,7 @@ const ImageGrid = memo(function ImageGrid({
                     <Ionicons
                       name="checkmark-circle"
                       size={35}
-                      color="#8eff8f"
+                      color="#47aa49"
                     />
                   </View>
                 )}
@@ -214,6 +221,16 @@ export default function BlogMain({
     null,
   );
 
+  // ✅ NEW — decide once per component instance whether to animate.
+  // First time BlogMain ever mounts in this app session -> true, plays once.
+  // Every mount after that (including CreateBlogScreen's focus-triggered
+  // resets) -> false, so the empty state just appears instantly.
+  const [shouldAnimate] = useState(() => {
+    if (hasPlayedCreateBlogIntro) return false;
+    hasPlayedCreateBlogIntro = true;
+    return true;
+  });
+
   const imagesMessage = messages.find(
     (m): m is AssistantMessage => m.type === "assistant" && !!m.images?.length,
   );
@@ -286,14 +303,26 @@ export default function BlogMain({
           </>
         ) : (
           <View style={styles.emptyStateWrapper}>
-            <View style={styles.imageContainer}>
+            {/* ✅ CHANGED — wrapped in Animated.View, entering gated by shouldAnimate */}
+            <Animated.View
+              style={styles.imageContainer}
+              entering={
+                shouldAnimate ? FadeInDown.duration(500).delay(80) : undefined
+              }
+            >
               <Image
                 source={require("@/assets/agent-img.png")}
                 style={styles.image}
               />
-            </View>
+            </Animated.View>
 
-            <View style={styles.inputBar}>
+            {/* ✅ CHANGED — wrapped in Animated.View, entering gated by shouldAnimate */}
+            <Animated.View
+              style={styles.inputBar}
+              entering={
+                shouldAnimate ? FadeInDown.duration(400).delay(200) : undefined
+              }
+            >
               <TextInput
                 style={styles.input}
                 placeholder="I'd love to know more"
@@ -310,7 +339,7 @@ export default function BlogMain({
               >
                 <Ionicons name="send" size={18} color="#fff" />
               </TouchableOpacity>
-            </View>
+            </Animated.View>
           </View>
         )}
       </KeyboardAvoidingView>

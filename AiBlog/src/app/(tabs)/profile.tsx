@@ -23,6 +23,8 @@ import {
   Ionicons,
   SimpleLineIcons,
 } from "@expo/vector-icons";
+// ✅ NEW — needed for the one-time entrance animation
+import Animated, { FadeInDown } from "react-native-reanimated";
 import ProfileName from "@/components/profile/ProfileName";
 import { useMenuStore } from "@/store/blog_store";
 
@@ -40,11 +42,23 @@ const HEADER_HEIGHT = 140; // fixed header height
 const AVATAR_OVERLAP = AVATAR_SIZE / 1.5; // how much avatar hangs below header
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
 
+// ✅ NEW — module-level flag, survives this screen unmounting/remounting.
+// Only resets to false on a true app restart / JS bundle reload, so the
+// entrance animation plays exactly once per app session.
+let hasPlayedProfileIntro = false;
+
 export default function ProfileScreen() {
   const { user, clearAuth } = useAuthStore();
   const [image, setImage] = useState<string | undefined>("");
   // const [remoteImage, setRemoteImage] = useState<string | null>(null);
   const [openImageModal, setOpenImageModal] = useState(false);
+
+  // ✅ NEW — decide once per mount whether to animate.
+  const [shouldAnimate] = useState(() => {
+    if (hasPlayedProfileIntro) return false;
+    hasPlayedProfileIntro = true;
+    return true;
+  });
 
   const [cameraPermission, requestCameraPermission] =
     ImagePicker.useCameraPermissions();
@@ -129,12 +143,19 @@ export default function ProfileScreen() {
 
       <View style={styles.root}>
         {/* ── Teal Header ── */}
+        {/* ✅ CHANGED — View -> Animated.View, entering gated by shouldAnimate */}
         <View style={styles.header}>
           <View style={styles.headerRow}></View>
         </View>
 
         {/* ── Grey Card ── */}
-        <View style={styles.card}>
+        {/* ✅ CHANGED — View -> Animated.View, entering gated by shouldAnimate */}
+        <Animated.View
+          style={styles.card}
+          entering={
+            shouldAnimate ? FadeInDown.duration(450).delay(150) : undefined
+          }
+        >
           {/* spacer so content sits below avatar */}
           <View style={styles.avatarSpacer} />
           <ProfileName />
@@ -156,10 +177,16 @@ export default function ProfileScreen() {
               <Text style={styles.statLabel}>Level</Text>
             </View>
           </View>
-        </View>
+        </Animated.View>
 
         {/* ── Avatar — rendered LAST so it's on top of everything ── */}
-        <View style={styles.avatarWrapper}>
+        {/* ✅ CHANGED — View -> Animated.View, entering gated by shouldAnimate */}
+        <Animated.View
+          style={styles.avatarWrapper}
+          entering={
+            shouldAnimate ? FadeInDown.duration(500).delay(220) : undefined
+          }
+        >
           <TouchableOpacity onPress={() => setOpenImageModal(true)}>
             <Image
               source={{
@@ -172,7 +199,7 @@ export default function ProfileScreen() {
               style={styles.avatar}
             />
           </TouchableOpacity>
-        </View>
+        </Animated.View>
         {/* <Button title="Clear" color="#000000" onPress={clearStoreValues} /> */}
         <TouchableOpacity
           style={styles.signoutBtn}
