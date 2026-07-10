@@ -9,15 +9,16 @@ import {
 } from "react-native";
 import Animated, {
   useSharedValue,
+  SharedValue,
   useAnimatedStyle,
   withSpring,
   withTiming,
-  runOnJS,
   interpolate,
   Extrapolation,
   useAnimatedReaction,
   cancelAnimation,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import {
   COLORS,
@@ -91,7 +92,7 @@ export default function FeaturedCarousel({ posts, onPress }: Props) {
     .onBegin(() => {
       isDragging.value = true;
       dragStart.value = translateX.value;
-      runOnJS(stopAutoPlay)();
+      scheduleOnRN(stopAutoPlay);
     })
     .onUpdate((e) => {
       // Allow rubber-banding at edges
@@ -109,8 +110,8 @@ export default function FeaturedCarousel({ posts, onPress }: Props) {
         nextIndex = (currentIndex.value - 1 + count) % count;
       }
 
-      runOnJS(goTo)(nextIndex);
-      runOnJS(startAutoPlay)();
+      scheduleOnRN(goTo, nextIndex);
+      scheduleOnRN(startAutoPlay);
     })
     .activeOffsetX([-10, 10])
     .failOffsetY([-15, 15]);
@@ -168,7 +169,7 @@ function SlideItem({
 }: {
   post: Post;
   index: number;
-  currentIndex: Animated.SharedValue<number>;
+  currentIndex: SharedValue<number>;
   count: number;
   onPress: () => void;
 }) {
