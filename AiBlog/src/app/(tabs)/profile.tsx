@@ -23,6 +23,7 @@ import {
   Ionicons,
   SimpleLineIcons,
 } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 // ✅ NEW — needed for the one-time entrance animation
 import Animated, { FadeInDown } from "react-native-reanimated";
 import ProfileName from "@/components/profile/ProfileName";
@@ -31,6 +32,8 @@ import { useMenuStore } from "@/store/blog_store";
 // Replace with your actual image source
 const AVATAR_URI = "https://cdn-icons-png.flaticon.com/512/3177/3177440.png";
 
+const GRADIENT_TOP = "#bd94fc";
+const GRADIENT_BOTTOM = "#3f6ffe";
 const WHITE = "#FFFFFF";
 const TEXT_DARK = "#1A1A1A";
 const TEXT_MUTED = "#7A7A7A";
@@ -143,11 +146,15 @@ export default function ProfileScreen() {
 
       <View style={styles.root}>
         {/* ── Teal Header ── */}
-        {/* ✅ CHANGED — View -> Animated.View, entering gated by shouldAnimate */}
         <View style={styles.header}>
+          <LinearGradient
+            colors={[GRADIENT_TOP, GRADIENT_BOTTOM]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
           <View style={styles.headerRow}></View>
         </View>
-
         {/* ── Grey Card ── */}
         {/* ✅ CHANGED — View -> Animated.View, entering gated by shouldAnimate */}
         <Animated.View
@@ -216,7 +223,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: YELLOW, // matches header so status bar area looks right
+    backgroundColor: GRADIENT_TOP, // matches header so status bar area looks right
   },
   content: {
     flex: 1,
@@ -263,7 +270,7 @@ const styles = StyleSheet.create({
   /* ── Header ── */
   header: {
     height: HEADER_HEIGHT,
-    backgroundColor: YELLOW,
+    overflow: "hidden",
   },
   headerRow: {
     flexDirection: "row",
