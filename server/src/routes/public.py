@@ -114,17 +114,3 @@ def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
 
     return user
 
-# get all blogs by user id
-@router.get("/user-blog/{user_id}", response_model=List[BlogResponse])
-def get_blogs_by_user_id(user_id: int, db: Session = Depends(get_db)):
-    result = db.execute(
-        select(Blog)
-        .where(Blog.user_id == user_id)
-        .order_by(desc(Blog.created_at))
-    )
-    blogs = result.scalars().all()
-
-    if not blogs:
-        raise HTTPException(status_code=404, detail="No blogs found for this user")
-
-    return blogs

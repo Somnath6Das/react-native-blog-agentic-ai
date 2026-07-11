@@ -49,11 +49,13 @@ export default function HomeScreen() {
       setBlogs(data);
       // console.log(data);
       setError(null);
+      //  total user blogs
       const userBlogs = data.filter((blog) => blog.user_id === user?.id);
       const existingPostIds = new Set(
         menuItems.map((item) => item.id).filter((id) => id !== undefined),
       );
       // Only keep blogs that AREN'T already in the local store
+      // all public blogs
       const newBlogs = userBlogs.filter(
         (blog) => !existingPostIds.has(blog.post_id),
       );
