@@ -9,7 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS, FONTS, RADIUS, SHADOWS, SPACING } from "../../constants/theme";
 import { router } from "expo-router";
 import { Blog } from "@/utils/get_public_blogs";
-import { formatDateTime } from "@/store/format_datetime";
+import { formatDateTime } from "@/utils/format_datetime";
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 

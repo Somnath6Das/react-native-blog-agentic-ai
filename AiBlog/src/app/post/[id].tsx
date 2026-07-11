@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useState } from "react";
+import React, { useRef, useCallback, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -31,6 +31,11 @@ import {
   SCREEN_WIDTH,
   SCREEN_HEIGHT,
 } from "../../constants/theme";
+import { getBlogById } from "@/utils/get_blog_by_id";
+import axios from "axios";
+import { Blog } from "@/utils/get_public_blogs";
+import { formatDateTime } from "@/utils/format_datetime";
+import { getUserByUserId } from "@/utils/get_user_by_user_id";
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
@@ -42,7 +47,8 @@ export default function PostDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const post = POSTS.find((p) => p.id === id);
+  // const post = POSTS.find((p) => p.id === id);
+  const [post, setPost] = useState<Blog>();
 
   const scrollY = useSharedValue(0);
 
@@ -86,13 +92,26 @@ export default function PostDetail() {
         : "transparent",
   }));
 
-  if (!post) {
-    return (
-      <View style={styles.notFound}>
-        <Text>{id}</Text>
-      </View>
-    );
-  }
+  useEffect(() => {
+    const fetchBlog = async () => {
+      try {
+        const blog = await getBlogById(Number(id));
+        // console.log(data);
+        setPost(blog);
+        // console.log(blog.user_id);
+        const user = await getUserByUserId(Number(blog.user_id));
+        console.log(user);
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+          console.log("Blog not found");
+        } else {
+          console.error("Failed to fetch blog:", error);
+        }
+      }
+    };
+
+    fetchBlog();
+  }, [id]);
 
   return (
     <View style={styles.root}>
@@ -123,7 +142,7 @@ export default function PostDetail() {
           <Ionicons name="chevron-back" size={22} color={COLORS.black} />
         </TouchableOpacity>
         <Text style={styles.navTitle} numberOfLines={1}>
-          {post.title}
+          {post?.title}
         </Text>
         <TouchableOpacity>
           <Ionicons name="bookmark-outline" size={20} color={COLORS.black} />
@@ -140,7 +159,7 @@ export default function PostDetail() {
         {/* Hero image with parallax */}
         <View style={styles.heroContainer}>
           <Animated.Image
-            source={{ uri: post.imageUrl }}
+            source={{ uri: post?.image }}
             style={[styles.heroImage, heroStyle]}
           />
           <View style={styles.heroGradient} />
@@ -153,9 +172,7 @@ export default function PostDetail() {
             key={`cat-${animKey}`}
             entering={FadeInDown.duration(400).delay(100)}
           >
-            <Text style={styles.category}>{post.category}</Text>
-            <Text style={styles.title}>{post.title}</Text>
-            <Text style={styles.location}>{post.location}</Text>
+            <Text style={styles.title}>{post?.title}</Text>
           </Animated.View>
 
           {/* Meta row */}
@@ -165,14 +182,15 @@ export default function PostDetail() {
             style={styles.metaRow}
           >
             <Ionicons name="time-outline" size={13} color={COLORS.gray500} />
-            <Text style={styles.metaText}>{post.timeAgo}</Text>
+            <Text style={styles.metaText}>
+              {formatDateTime(post?.created_at || "")}
+            </Text>
             <View style={styles.dot} />
             <Ionicons
               name="bookmark-outline"
               size={13}
               color={COLORS.gray500}
             />
-            <Text style={styles.metaText}>{post.saves}</Text>
           </Animated.View>
 
           {/* Author */}
@@ -181,18 +199,18 @@ export default function PostDetail() {
             entering={FadeInDown.duration(400).delay(200)}
             style={styles.authorRow}
           >
-            <Image
+            {/* <Image
               source={{ uri: post.author.avatarUrl }}
               style={styles.avatar}
             />
-            <Text style={styles.authorName}>{post.author.name}</Text>
+            <Text style={styles.authorName}>{post.author.name}</Text> */}
           </Animated.View>
 
           {/* Divider */}
           <View style={styles.divider} />
 
           {/* Body */}
-          <Animated.View
+          {/* <Animated.View
             key={`body-${animKey}`}
             entering={FadeInDown.duration(500).delay(250)}
           >
@@ -209,7 +227,7 @@ export default function PostDetail() {
                 )}
               </Text>
             ))}
-          </Animated.View>
+          </Animated.View> */}
         </View>
       </AnimatedScrollView>
     </View>

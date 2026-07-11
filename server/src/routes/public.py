@@ -13,6 +13,8 @@ import traceback
 from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime
 from sqlalchemy import select, desc
+from src.database.user.models import User
+
 
 router = APIRouter(prefix="/public", tags=["public"])
 
@@ -71,3 +73,40 @@ def get_all_blogs(db: Session = Depends(get_db)):
     )
     blogs = result.scalars().all()
     return blogs
+
+
+@router.get("/single/{blog_id}", response_model=BlogResponse)
+def get_blog_by_id(blog_id: int, db: Session = Depends(get_db)):
+    result = db.execute(
+        select(Blog).where(Blog.id == blog_id)
+    )
+    blog = result.scalar_one_or_none()
+
+    if blog is None:
+        raise HTTPException(status_code=404, detail="Blog not found")
+
+    return blog
+
+
+
+class UserResponse(BaseModel):
+    id: int
+    name: str
+    email:str
+    avatar_url:str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+@router.get("/user/{user_id}", response_model=UserResponse)
+def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
+    result = db.execute(
+        select(User).where(User.id == user_id)
+    )
+    user = result.scalar_one_or_none()
+
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return user
