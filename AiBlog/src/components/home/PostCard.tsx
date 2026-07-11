@@ -24,8 +24,8 @@ export default function PostCard({ post }: Props) {
     transform: [{ scale: scale.value }],
   }));
   const goToPost = useCallback(() => {
-    router.push(`/post/${post.created_at}`);
-  }, [post.created_at]);
+    router.push(`/post/${post.id}`);
+  }, [post.id]);
 
   return (
     <AnimatedTouchable

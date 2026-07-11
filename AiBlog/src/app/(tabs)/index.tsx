@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -17,12 +16,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import FeaturedCarousel from "@/components/home/FeaturedCard";
 import PostCard from "@/components/home/PostCard";
 import { COLORS, FONTS, SPACING } from "@/constants/theme";
-import type { Post } from "@/data/posts";
-import { POSTS } from "@/data/posts";
+
 import { Blog, getPublicBlogs } from "@/utils/get_public_blogs";
 import axios from "axios";
-
-const popular = POSTS.filter((p) => !p.featured);
 
 // Module-level flag: survives component unmount/remount, only resets
 // when the JS runtime restarts (i.e. a real fresh app launch/reload).
@@ -126,7 +122,7 @@ export default function HomeScreen() {
         {/* Popular list */}
         {blogs.slice(0, 3).map((post, idx) => (
           <Animated.View
-            key={post.created_at}
+            key={post.id}
             entering={
               shouldAnimate
                 ? FadeInDown.duration(400).delay(280 + idx * 80)

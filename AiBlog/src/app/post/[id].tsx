@@ -89,7 +89,7 @@ export default function PostDetail() {
   if (!post) {
     return (
       <View style={styles.notFound}>
-        <Text>Post not found</Text>
+        <Text>{id}</Text>
       </View>
     );
   }

@@ -123,7 +123,7 @@ export default function FeaturedCarousel({ posts }: Props) {
 
   const goToPost = useCallback(
     (post: Blog) => {
-      router.push(`/post/${post.created_at}`);
+      router.push(`/post/${post.id}`);
     },
     [router],
   );
@@ -132,9 +132,9 @@ export default function FeaturedCarousel({ posts }: Props) {
       <GestureDetector gesture={panGesture}>
         <View style={styles.clipper}>
           <Animated.View style={[styles.strip, stripStyle]}>
-            {posts.map((post, i) => (
+            {posts.slice(0, 7).map((post, i) => (
               <SlideItem
-                key={post.created_at}
+                key={post.id}
                 post={post}
                 index={i}
                 currentIndex={currentIndex}
@@ -148,7 +148,7 @@ export default function FeaturedCarousel({ posts }: Props) {
 
       {/* Dot indicators */}
       <View style={styles.dots}>
-        {posts.map((_, i) => (
+        {posts.slice(0, 7).map((post, i) => (
           <TouchableOpacity
             key={i}
             onPress={() => {
