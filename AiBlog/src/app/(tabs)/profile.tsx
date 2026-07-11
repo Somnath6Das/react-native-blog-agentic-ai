@@ -111,9 +111,7 @@ export default function ProfileScreen() {
     handleResult(result?.assets[0]?.uri);
     setOpenImageModal(false);
   };
-  const clearStoreValues = async () => {
-    await useMenuStore.getState().clearStore();
-  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <Modal

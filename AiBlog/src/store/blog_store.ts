@@ -12,7 +12,6 @@ export interface MenuItem {
 
 interface MenuState {
   menuItems: MenuItem[];
-  nextId: number;
   resetKey: number;
   addMenuItem: (
     item: Omit<MenuItem, "id" | "images"> & { images?: string[] },
@@ -27,21 +26,30 @@ interface MenuState {
   clearStore: () => Promise<void>;
 }
 
+const getRandomNumber = (min: number, max: number) => {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+};
+
 export const useMenuStore = create<MenuState>()(
   persist(
     (set, get) => ({
       menuItems: [],
-      nextId: 1,
       resetKey: 0,
       triggerCreateBlogReset: () =>
         // NEW
         set((state) => ({ resetKey: state.resetKey + 1 })),
       clearStore: async () => {
-        set({ menuItems: [], nextId: 1, resetKey: 0 });
+        set({ menuItems: [], resetKey: 0 });
         await AsyncStorage.removeItem("menu-store");
       },
       addMenuItem: (item) => {
-        const newId = get().nextId;
+        // Keep generating until we get an id that isn't already in use
+        const existingIds = new Set(get().menuItems.map((m) => m.id));
+        let newId = getRandomNumber(1, 1_000_000);
+        while (existingIds.has(newId)) {
+          newId = getRandomNumber(1, 1_000_000);
+        }
+
         const newItem: MenuItem = {
           id: newId,
           user_topic: item.user_topic,
@@ -51,7 +59,6 @@ export const useMenuStore = create<MenuState>()(
         };
         set((state) => ({
           menuItems: [...state.menuItems, newItem],
-          nextId: state.nextId + 1,
         }));
         return newId;
       },
@@ -94,7 +101,6 @@ export const useMenuStore = create<MenuState>()(
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         menuItems: state.menuItems,
-        nextId: state.nextId,
       }), // NEW — don't persist resetKey, it's just a signal
     },
   ),

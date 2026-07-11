@@ -17,6 +17,7 @@ import * as SecureStore from "expo-secure-store";
 import api from "@/utils/api";
 import { Ionicons } from "@expo/vector-icons";
 import useAuthStore from "@/store/auth_store";
+import { useMenuStore } from "@/store/blog_store";
 
 const YELLOW = "#F5C518";
 const ORANGE = "#F0A500";
@@ -25,12 +26,12 @@ const TEXT_DARK = "#1A1A1A";
 const TEXT_MUTED = "#AAAAAA";
 
 export default function SignupScreen() {
-  const { setAuth } = useAuthStore();
+  const { setAuth, clearAuth } = useAuthStore();
   const [email, setEmail] = useState("");
   const [step, setStep] = useState(false);
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
-
+  const clearAllBlogs = useMenuStore((state) => state.clearStore);
   const handleBack = () => {
     setStep(false);
     setOtp("");
@@ -56,11 +57,12 @@ export default function SignupScreen() {
         const { access_token, user } = res.data;
 
         // save user to zustand store
-        useAuthStore.getState().setAuth({
+        setAuth({
           id: user.id,
           name: user.name || "",
           email: user.email,
           avatar_url: user.avatar_url || "",
+          created_at: user.created_at,
         });
 
         // console.log(user.id); // 1
@@ -74,6 +76,8 @@ export default function SignupScreen() {
       }
     } catch (err: any) {
       console.log(err.message);
+      clearAuth();
+      await clearAllBlogs();
       const detail = err.response?.data?.detail;
 
       if (Array.isArray(detail)) {

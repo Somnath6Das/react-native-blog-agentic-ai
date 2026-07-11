@@ -19,6 +19,8 @@ import { COLORS, FONTS, SPACING } from "@/constants/theme";
 
 import { Blog, getPublicBlogs } from "@/utils/get_public_blogs";
 import axios from "axios";
+import useAuthStore from "@/store/auth_store";
+import { useMenuStore } from "@/store/blog_store";
 
 // Module-level flag: survives component unmount/remount, only resets
 // when the JS runtime restarts (i.e. a real fresh app launch/reload).
@@ -26,6 +28,9 @@ let hasPlayedIntroAnimation = false;
 
 export default function HomeScreen() {
   const router = useRouter();
+  const addMenuItem = useMenuStore((s) => s.addMenuItem);
+  const menuItems = useMenuStore((s) => s.menuItems);
+  const { user, clearAuth } = useAuthStore();
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -44,6 +49,23 @@ export default function HomeScreen() {
       setBlogs(data);
       // console.log(data);
       setError(null);
+      const userBlogs = data.filter((blog) => blog.user_id === user?.id);
+      const existingPostIds = new Set(
+        menuItems.map((item) => item.id).filter((id) => id !== undefined),
+      );
+      // Only keep blogs that AREN'T already in the local store
+      const newBlogs = userBlogs.filter(
+        (blog) => !existingPostIds.has(blog.post_id),
+      );
+
+      newBlogs.forEach((blog) => {
+        addMenuItem({
+          user_topic: "",
+          title: blog.title,
+          file_path: blog.html_path,
+          images: blog.image ? [blog.image] : [],
+        });
+      });
     } catch (err) {
       setError(
         axios.isAxiosError(err)
