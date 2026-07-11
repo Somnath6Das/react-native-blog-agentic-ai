@@ -28,7 +28,8 @@ import {
   SPACING,
   SCREEN_WIDTH,
 } from "../../constants/theme";
-import type { Post } from "../../data/posts";
+import { Blog } from "@/utils/get_public_blogs";
+import { router } from "expo-router";
 
 const CARD_HEIGHT = SCREEN_WIDTH < 375 ? 220 : SCREEN_WIDTH < 428 ? 260 : 300;
 const CARD_WIDTH = SCREEN_WIDTH - SPACING.md * 2;
@@ -36,11 +37,10 @@ const AUTO_PLAY_INTERVAL = 3500;
 const SWIPE_THRESHOLD = CARD_WIDTH * 0.25;
 
 interface Props {
-  posts: Post[];
-  onPress: (post: Post) => void;
+  posts: Blog[];
 }
 
-export default function FeaturedCarousel({ posts, onPress }: Props) {
+export default function FeaturedCarousel({ posts }: Props) {
   const count = posts.length;
   // We use a virtual infinite list: offset = currentIndex * CARD_WIDTH
   const currentIndex = useSharedValue(0);
@@ -121,6 +121,12 @@ export default function FeaturedCarousel({ posts, onPress }: Props) {
     transform: [{ translateX: translateX.value }],
   }));
 
+  const goToPost = useCallback(
+    (post: Blog) => {
+      router.push(`/post/${post.created_at}`);
+    },
+    [router],
+  );
   return (
     <View style={styles.wrapper}>
       <GestureDetector gesture={panGesture}>
@@ -128,12 +134,12 @@ export default function FeaturedCarousel({ posts, onPress }: Props) {
           <Animated.View style={[styles.strip, stripStyle]}>
             {posts.map((post, i) => (
               <SlideItem
-                key={post.id}
+                key={post.created_at}
                 post={post}
                 index={i}
                 currentIndex={currentIndex}
                 count={count}
-                onPress={() => onPress(post)}
+                onPress={() => goToPost(post)}
               />
             ))}
           </Animated.View>
@@ -167,7 +173,7 @@ function SlideItem({
   count,
   onPress,
 }: {
-  post: Post;
+  post: Blog;
   index: number;
   currentIndex: SharedValue<number>;
   count: number;
@@ -188,7 +194,7 @@ function SlideItem({
         onPress={onPress}
         activeOpacity={0.92}
       >
-        <Image source={{ uri: post.imageUrl }} style={styles.image} />
+        <Image source={{ uri: post.image }} style={styles.image} />
         {/* Gradient overlay layers */}
         <View style={styles.overlayTop} />
         <View style={styles.overlayBottom} />
@@ -196,11 +202,6 @@ function SlideItem({
           <Text style={styles.title} numberOfLines={2}>
             {post.title}
           </Text>
-          {post.subtitle && (
-            <Text style={styles.subtitle} numberOfLines={1}>
-              {post.subtitle}
-            </Text>
-          )}
         </View>
       </TouchableOpacity>
     </Animated.View>

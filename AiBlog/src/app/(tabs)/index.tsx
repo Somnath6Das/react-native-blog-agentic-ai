@@ -46,7 +46,7 @@ export default function HomeScreen() {
     try {
       const data = await getPublicBlogs();
       setBlogs(data);
-      console.log(data);
+      // console.log(data);
       setError(null);
     } catch (err) {
       setError(
@@ -71,13 +71,6 @@ export default function HomeScreen() {
     await fetchBlogs();
     setRefreshing(false);
   }, []);
-
-  const goToPost = useCallback(
-    (post: Post) => {
-      router.push(`/post/${post.id}`);
-    },
-    [router],
-  );
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -114,7 +107,7 @@ export default function HomeScreen() {
             shouldAnimate ? FadeInDown.duration(500).delay(150) : undefined
           }
         >
-          <FeaturedCarousel posts={POSTS} onPress={goToPost} />
+          <FeaturedCarousel posts={blogs} />
         </Animated.View>
 
         {/* Popular header */}
@@ -131,16 +124,16 @@ export default function HomeScreen() {
         </Animated.View>
 
         {/* Popular list */}
-        {popular.map((post, idx) => (
+        {blogs.slice(0, 3).map((post, idx) => (
           <Animated.View
-            key={post.id}
+            key={post.created_at}
             entering={
               shouldAnimate
                 ? FadeInDown.duration(400).delay(280 + idx * 80)
                 : undefined
             }
           >
-            <PostCard post={post} onPress={() => goToPost(post)} />
+            <PostCard post={post} />
           </Animated.View>
         ))}
 

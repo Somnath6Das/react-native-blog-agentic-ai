@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import Animated, {
   useSharedValue,
@@ -7,26 +7,30 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, FONTS, RADIUS, SHADOWS, SPACING } from "../../constants/theme";
-import type { Post } from "../../data/posts";
+import { router } from "expo-router";
+import { Blog } from "@/utils/get_public_blogs";
+import { formatDateTime } from "@/store/format_datetime";
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 interface Props {
-  post: Post;
-  onPress: () => void;
+  post: Blog;
 }
 
-export default function PostCard({ post, onPress }: Props) {
+export default function PostCard({ post }: Props) {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
+  const goToPost = useCallback(() => {
+    router.push(`/post/${post.created_at}`);
+  }, [post.created_at]);
 
   return (
     <AnimatedTouchable
       style={[styles.card, animatedStyle]}
-      onPress={onPress}
+      onPress={goToPost}
       onPressIn={() => {
         scale.value = withSpring(0.97, { damping: 15, stiffness: 300 });
       }}
@@ -35,18 +39,14 @@ export default function PostCard({ post, onPress }: Props) {
       }}
       activeOpacity={1}
     >
-      <Image source={{ uri: post.imageUrl }} style={styles.image} />
+      <Image source={{ uri: post.image }} style={styles.image} />
       <View style={styles.info}>
-        <Text style={styles.category}>{post.category}</Text>
         <Text style={styles.title} numberOfLines={2}>
           {post.title}
         </Text>
         <View style={styles.meta}>
           <Ionicons name="time-outline" size={12} color={COLORS.gray500} />
-          <Text style={styles.metaText}>{post.readTime}</Text>
-          <View style={styles.dot} />
-          <Ionicons name="bookmark-outline" size={12} color={COLORS.gray500} />
-          <Text style={styles.metaText}>{post.saves}</Text>
+          <Text style={styles.metaText}>{formatDateTime(post.created_at)}</Text>
         </View>
       </View>
     </AnimatedTouchable>
