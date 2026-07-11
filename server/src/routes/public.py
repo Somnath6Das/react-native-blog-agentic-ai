@@ -14,7 +14,7 @@ from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime
 from sqlalchemy import select, desc
 from src.database.user.models import User
-
+from typing import Optional
 
 router = APIRouter(prefix="/public", tags=["public"])
 
@@ -89,11 +89,13 @@ def get_blog_by_id(blog_id: int, db: Session = Depends(get_db)):
 
 
 
+
+
 class UserResponse(BaseModel):
     id: int
-    name: str
-    email:str
-    avatar_url:str
+    name: Optional[str] = None
+    email: str
+    avatar_url: Optional[str] = None
     created_at: datetime
 
     class Config:

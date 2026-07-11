@@ -52,6 +52,7 @@ let hasPlayedProfileIntro = false;
 
 export default function ProfileScreen() {
   const { user, clearAuth } = useAuthStore();
+  const clearAllBlogs = useMenuStore((state) => state.clearStore);
   const [image, setImage] = useState<string | undefined>("");
   // const [remoteImage, setRemoteImage] = useState<string | null>(null);
   const [openImageModal, setOpenImageModal] = useState(false);
@@ -71,6 +72,7 @@ export default function ProfileScreen() {
   const handleSignout = async () => {
     await SecureStore.deleteItemAsync("token");
     clearAuth();
+    await clearAllBlogs();
     console.log("Clear Auth from store");
     router.push("/(auth)");
   };
