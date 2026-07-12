@@ -9,7 +9,10 @@ import {
   Dimensions,
   Platform,
   StatusBar,
+  Linking,
+  ActivityIndicator,
 } from "react-native";
+import RenderHtml from "react-native-render-html";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import Animated, {
   useSharedValue,
@@ -36,6 +39,8 @@ import axios from "axios";
 import { Blog } from "@/utils/get_public_blogs";
 import { formatDateTime } from "@/utils/format_datetime";
 import { getUserByUserId } from "@/utils/get_user_by_user_id";
+import api from "@/utils/api";
+import HtmlTextRender from "@/components/home/HtmlTextRender";
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
@@ -49,7 +54,7 @@ export default function PostDetail() {
   const insets = useSafeAreaInsets();
   // const post = POSTS.find((p) => p.id === id);
   const [post, setPost] = useState<Blog>();
-
+  const [htmlResTxt, setHtmlResTxt] = useState<string>("");
   const scrollY = useSharedValue(0);
 
   const [animKey, setAnimKey] = useState(0);
@@ -98,9 +103,14 @@ export default function PostDetail() {
         const blog = await getBlogById(Number(id));
         // console.log(data);
         setPost(blog);
+        const htmlRes = await api.get(`/${blog.html_path}`, {
+          transformResponse: (res) => res, // keep raw text, don't JSON.parse it
+        });
+        setHtmlResTxt(htmlRes.data);
+        // console.log(htmlRes);
         // console.log(blog.user_id);
         const user = await getUserByUserId(Number(blog.user_id));
-        console.log(user);
+        // console.log(user);
       } catch (error) {
         if (axios.isAxiosError(error) && error.response?.status === 404) {
           console.log("Blog not found");
@@ -174,7 +184,6 @@ export default function PostDetail() {
           >
             <Text style={styles.title}>{post?.title}</Text>
           </Animated.View>
-
           {/* Meta row */}
           <Animated.View
             key={`meta-${animKey}`}
@@ -192,7 +201,6 @@ export default function PostDetail() {
               color={COLORS.gray500}
             />
           </Animated.View>
-
           {/* Author */}
           <Animated.View
             key={`author-${animKey}`}
@@ -205,11 +213,14 @@ export default function PostDetail() {
             />
             <Text style={styles.authorName}>{post.author.name}</Text> */}
           </Animated.View>
-
           {/* Divider */}
           <View style={styles.divider} />
-
           {/* Body */}
+          {htmlResTxt ? (
+            <HtmlTextRender htmlResTxt={htmlResTxt} />
+          ) : (
+            <ActivityIndicator size="small" color="#0d622c" />
+          )}
           {/* <Animated.View
             key={`body-${animKey}`}
             entering={FadeInDown.duration(500).delay(250)}
@@ -332,6 +343,7 @@ const styles = StyleSheet.create({
     gap: 4,
     marginBottom: SPACING.md,
   },
+
   metaText: {
     ...FONTS.bodySM,
     color: COLORS.gray500,

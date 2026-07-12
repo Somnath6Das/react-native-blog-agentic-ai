@@ -21,6 +21,7 @@ import RenderHtml from "react-native-render-html";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import useAuthStore from "@/store/auth_store";
 import api from "@/utils/api";
+import HtmlTextRender from "../home/HtmlTextRender";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const IMAGE_GAP = 8;
@@ -160,18 +161,7 @@ const MessageRow = memo(function MessageRow({
         </View>
         <View style={styles.assistantContent}>
           <View style={styles.assistantBubble}>
-            <RenderHtml
-              contentWidth={HTML_CONTENT_WIDTH}
-              source={{ html: item.html }}
-              tagsStyles={htmlStyles}
-              renderersProps={{
-                a: {
-                  onPress: (_event, href) => {
-                    if (href) Linking.openURL(href);
-                  },
-                },
-              }}
-            />
+            <HtmlTextRender htmlResTxt={item.html} />
           </View>
           <View style={styles.assistant}>
             <TouchableOpacity
