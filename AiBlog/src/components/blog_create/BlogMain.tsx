@@ -160,9 +160,8 @@ const MessageRow = memo(function MessageRow({
           <Ionicons name="sparkles" size={14} color="#ffffff" />
         </View>
         <View style={styles.assistantContent}>
-          <View style={styles.assistantBubble}>
-            <HtmlTextRender htmlResTxt={item.html} />
-          </View>
+          <HtmlTextRender htmlResTxt={item.html} />
+
           <View style={styles.assistant}>
             <TouchableOpacity
               style={styles.publishButton}
@@ -406,13 +405,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   assistantContent: { flex: 1 },
-  assistantBubble: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 14,
-    padding: 14,
-  },
 
   // Image grid
   imageGrid: {

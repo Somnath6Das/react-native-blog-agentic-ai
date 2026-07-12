@@ -213,32 +213,8 @@ export default function PostDetail() {
             />
             <Text style={styles.authorName}>{post.author.name}</Text> */}
           </Animated.View>
-          {/* Divider */}
-          <View style={styles.divider} />
           {/* Body */}
-          {htmlResTxt ? (
-            <HtmlTextRender htmlResTxt={htmlResTxt} />
-          ) : (
-            <ActivityIndicator size="small" color="#0d622c" />
-          )}
-          {/* <Animated.View
-            key={`body-${animKey}`}
-            entering={FadeInDown.duration(500).delay(250)}
-          >
-            <Text style={styles.sectionHeading}>About location</Text>
-            {post.body.split("\n\n").map((para, i) => (
-              <Text key={i} style={styles.body}>
-                {i === post.body.split("\n\n").length - 1 ? (
-                  <>
-                    {para.slice(0, -60)}
-                    <Text style={styles.readMore}> Read More</Text>
-                  </>
-                ) : (
-                  para
-                )}
-              </Text>
-            ))}
-          </Animated.View> */}
+          <HtmlTextRender htmlResTxt={htmlResTxt} />
         </View>
       </AnimatedScrollView>
     </View>
@@ -371,11 +347,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     fontWeight: "600",
   },
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.gray100,
-    marginBottom: SPACING.md,
-  },
+
   sectionHeading: {
     ...FONTS.displayMD,
     fontSize: 17,

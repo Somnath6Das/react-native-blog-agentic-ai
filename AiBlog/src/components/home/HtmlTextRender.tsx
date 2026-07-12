@@ -1,4 +1,4 @@
-import { View, Text, Linking } from "react-native";
+import { View, Text, Linking, StyleSheet } from "react-native";
 import React, { useCallback, useState } from "react";
 import { RenderHTML } from "react-native-render-html";
 import { SCREEN_WIDTH } from "@/constants/theme";
@@ -21,7 +21,7 @@ const HtmlTextRender = ({ htmlResTxt }: any) => {
       key={`body-${animKey}`}
       entering={FadeInDown.duration(500).delay(250)}
     >
-      <View style={htmlResTxt.assistantBubble}>
+      <View style={styles.assistantBubble}>
         <RenderHTML
           contentWidth={HTML_CONTENT_WIDTH}
           source={{ html: htmlResTxt }}
@@ -38,7 +38,8 @@ const HtmlTextRender = ({ htmlResTxt }: any) => {
     </Animated.View>
   );
 };
-const htmlStyles = {
+
+const styles = StyleSheet.create({
   assistantBubble: {
     backgroundColor: "#fff",
     borderWidth: 1,
@@ -46,6 +47,8 @@ const htmlStyles = {
     borderRadius: 14,
     padding: 14,
   },
+});
+const htmlStyles = {
   body: { fontSize: 15, color: "#111827", lineHeight: 22 },
   p: { fontSize: 18, marginTop: 0, marginBottom: 10 },
   h1: { fontSize: 21, fontWeight: "700" as const, marginBottom: 8 },
