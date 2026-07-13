@@ -158,14 +158,19 @@ const MessageRow = memo(function MessageRow({
   return (
     <View>
       <View style={styles.assistant}>
-        <View style={styles.published}>
-          <TouchableOpacity style={styles.publishButton} onPress={publishBlog}>
-            <Text style={styles.publishButtonText}>Publish Blog</Text>
-          </TouchableOpacity>
-          {showSuccess && (
-            <Ionicons name="checkmark-circle" size={24} color="green" />
-          )}
-        </View>
+        {item.images.length > 1 && (
+          <View style={styles.published}>
+            <TouchableOpacity
+              style={styles.publishButton}
+              onPress={publishBlog}
+            >
+              <Text style={styles.publishButtonText}>Publish Blog</Text>
+            </TouchableOpacity>
+            {showSuccess && (
+              <Ionicons name="checkmark-circle" size={24} color="green" />
+            )}
+          </View>
+        )}
       </View>
       <View style={styles.assistantRow}>
         <View style={styles.assistantAvatar}>
@@ -175,17 +180,20 @@ const MessageRow = memo(function MessageRow({
           <HtmlTextRender htmlResTxt={item.html} />
 
           <View style={styles.assistant}>
-            <View style={styles.published}>
-              <TouchableOpacity
-                style={styles.publishButton}
-                onPress={publishBlog}
-              >
-                <Text style={styles.publishButtonText}>Publish Blog</Text>
-              </TouchableOpacity>
-              {showSuccess && (
-                <Ionicons name="checkmark-circle" size={24} color="green" />
-              )}
-            </View>
+            {item.images.length > 1 && (
+              <View style={styles.published}>
+                <TouchableOpacity
+                  style={styles.publishButton}
+                  onPress={publishBlog}
+                >
+                  <Text style={styles.publishButtonText}>Publish Blog</Text>
+                </TouchableOpacity>
+                {showSuccess && (
+                  <Ionicons name="checkmark-circle" size={24} color="green" />
+                )}
+              </View>
+            )}
+
             <ImageGrid
               images={item.images}
               selectedIndex={selectedImageIndex ?? 0}
