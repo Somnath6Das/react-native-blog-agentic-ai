@@ -24,9 +24,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { POSTS } from "../../data/posts";
 import { COLORS, FONTS, SPACING, SCREEN_HEIGHT } from "../../constants/theme";
-import { bold } from "@expo/ui/swift-ui/modifiers";
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
