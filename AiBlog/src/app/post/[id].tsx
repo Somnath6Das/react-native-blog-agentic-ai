@@ -6,13 +6,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Dimensions,
   Platform,
   StatusBar,
-  Linking,
-  ActivityIndicator,
 } from "react-native";
-import RenderHtml from "react-native-render-html";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import Animated, {
   useSharedValue,
@@ -24,7 +20,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { POSTS } from "../../data/posts";
 import {
   COLORS,
   FONTS,

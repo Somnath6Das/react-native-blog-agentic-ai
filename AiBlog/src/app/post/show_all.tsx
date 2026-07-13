@@ -5,7 +5,6 @@ import {
   Image,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
   Dimensions,
   Platform,
   StatusBar,
@@ -19,20 +18,29 @@ import Animated, {
   useAnimatedScrollHandler,
   useAnimatedStyle,
   interpolate,
+  interpolateColor,
   Extrapolation,
   FadeInDown,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS, FONTS, SPACING, SCREEN_HEIGHT } from "../../constants/theme";
+import { BlogCard } from "@/components/home/BlogCard";
+import { Blog, getPublicBlogs } from "@/utils/get_public_blogs";
 
-const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
+// Animate the FlatList itself instead of wrapping it in a ScrollView.
+// Nesting a FlatList inside a ScrollView with the same (vertical) orientation
+// breaks virtualization - the FlatList IS the scroll container now.
+const AnimatedFlatList = Animated.createAnimatedComponent(
+  Animated.FlatList<Blog>,
+);
 
 const HERO_HEIGHT = SCREEN_HEIGHT * 0.35;
 const STATUS_HEIGHT =
   Platform.OS === "android" ? (StatusBar.currentHeight ?? 0) : 0;
 
 export default function ShowAll() {
+  const [blogs, setBlogs] = useState<Blog[]>([]);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
@@ -41,49 +49,75 @@ export default function ShowAll() {
     scrollY.value = event.contentOffset.y;
   });
 
-  // Nav bar fade in on scroll
-  const navBarStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.value, [0, 100], [0, 1], Extrapolation.CLAMP),
-    backgroundColor: COLORS.white,
-  }));
+  // Nav bar is transparent at the top, fades to solid white as the user
+  // scrolls down (fully white by 60px of scroll).
+  const navAnimatedStyle = useAnimatedStyle(() => {
+    const progress = interpolate(
+      scrollY.value,
+      [0, 60],
+      [0, 1],
+      Extrapolation.CLAMP,
+    );
+    return {
+      backgroundColor: interpolateColor(
+        progress,
+        [0, 1],
+        ["rgba(255,255,255,0)", COLORS.white],
+      ),
+      borderBottomColor: interpolateColor(
+        progress,
+        [0, 1],
+        ["rgba(0,0,0,0)", COLORS.gray100],
+      ),
+    };
+  });
+
+  const fetchBlogs = async () => {
+    try {
+      const data = await getPublicBlogs();
+      setBlogs(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    fetchBlogs();
+  }, []);
 
   return (
     <View style={styles.root}>
-      {/* Sticky back & bookmark buttons */}
-      <View
+      {/* Top bar - transparent at top, fades to white while scrolling down */}
+      <Animated.View
         style={[
           styles.floatingNav,
+          navAnimatedStyle,
           { paddingTop: insets.top + STATUS_HEIGHT + 8 },
         ]}
       >
         <TouchableOpacity style={styles.iconBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={22} color={COLORS.white} />
+          <Ionicons name="chevron-back" size={22} color={COLORS.black} />
         </TouchableOpacity>
-      </View>
-
-      {/* Opaque navbar that fades in when scrolled */}
-
-      <View
-        style={[
-          styles.floatingNav,
-          { paddingTop: insets.top + STATUS_HEIGHT + 8 },
-        ]}
-      >
-        <TouchableOpacity style={styles.iconBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={22} color={COLORS.white} />
-        </TouchableOpacity>
-        <Text numberOfLines={1} style={{ fontSize: 20, fontWeight: "700" }}>
+        <Text numberOfLines={1} style={styles.navTitle}>
           All Blogs
         </Text>
         <View style={{ width: 38 }} />
-      </View>
-      <AnimatedScrollView
+      </Animated.View>
+
+      <AnimatedFlatList
+        data={blogs}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={({ item }) => <BlogCard post={item} />}
+        numColumns={2}
+        columnWrapperStyle={{ gap: 16 }}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
-        showsVerticalScrollIndicator={false}
-        bounces
-        contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
-      ></AnimatedScrollView>
+        contentContainerStyle={{
+          gap: 16,
+          padding: 16,
+          paddingTop: insets.top + STATUS_HEIGHT + 66,
+          paddingBottom: insets.bottom + 32,
+        }}
+      />
     </View>
   );
 }
@@ -98,7 +132,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  // Floating nav (dark icons over image)
+  // Top bar container - background/border color are animated (see navAnimatedStyle)
   floatingNav: {
     position: "absolute",
     top: 0,
@@ -106,31 +140,19 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
     flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: SPACING.md,
-  },
-  iconBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "rgba(0,0,0,0.32)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  // Opaque navbar fades in on scroll
-  opaqueNav: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 11,
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: SPACING.md,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray100,
+  },
+  iconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: COLORS.gray100,
+    alignItems: "center",
+    justifyContent: "center",
   },
   navTitle: {
     ...FONTS.displayMD,
