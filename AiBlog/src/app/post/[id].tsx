@@ -158,9 +158,6 @@ export default function PostDetail() {
         <Text style={styles.navTitle} numberOfLines={1}>
           {post?.title}
         </Text>
-        <TouchableOpacity>
-          <Ionicons name="bookmark-outline" size={20} color={COLORS.black} />
-        </TouchableOpacity>
       </Animated.View>
 
       <AnimatedScrollView

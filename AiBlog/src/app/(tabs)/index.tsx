@@ -138,7 +138,7 @@ export default function HomeScreen() {
           style={styles.popularHeader}
         >
           <Text style={styles.sectionTitle}>Popular</Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("/post/show_all")}>
             <Text style={styles.showAll}>Show all</Text>
           </TouchableOpacity>
         </Animated.View>
