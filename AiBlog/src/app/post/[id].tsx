@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useState, useEffect } from "react";
+import React, { useRef, useCallback, useState, useEffect, use } from "react";
 import {
   View,
   Text,
@@ -41,6 +41,7 @@ import { formatDateTime } from "@/utils/format_datetime";
 import { getUserByUserId } from "@/utils/get_user_by_user_id";
 import api from "@/utils/api";
 import HtmlTextRender from "@/components/home/HtmlTextRender";
+import { User } from "@/store/auth_store";
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
@@ -55,6 +56,7 @@ export default function PostDetail() {
   // const post = POSTS.find((p) => p.id === id);
   const [post, setPost] = useState<Blog>();
   const [htmlResTxt, setHtmlResTxt] = useState<string>("");
+  const [user, setUser] = useState<User>();
   const scrollY = useSharedValue(0);
 
   const [animKey, setAnimKey] = useState(0);
@@ -96,7 +98,11 @@ export default function PostDetail() {
         ? "rgba(0,0,0,0.3)"
         : "transparent",
   }));
-
+  const BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
+  const AVATAR_URI = "https://cdn-icons-png.flaticon.com/512/3177/3177440.png";
+  const avatarUri = user?.avatar_url
+    ? `${BASE_URL}${user.avatar_url}`
+    : AVATAR_URI;
   useEffect(() => {
     const fetchBlog = async () => {
       try {
@@ -111,6 +117,7 @@ export default function PostDetail() {
         // console.log(blog.user_id);
         const user = await getUserByUserId(Number(blog.user_id));
         // console.log(user);
+        setUser(user);
       } catch (error) {
         if (axios.isAxiosError(error) && error.response?.status === 404) {
           console.log("Blog not found");
@@ -134,9 +141,6 @@ export default function PostDetail() {
       >
         <TouchableOpacity style={styles.iconBtn} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={22} color={COLORS.white} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconBtn}>
-          <Ionicons name="bookmark-outline" size={20} color={COLORS.white} />
         </TouchableOpacity>
       </View>
 
@@ -207,11 +211,9 @@ export default function PostDetail() {
             entering={FadeInDown.duration(400).delay(200)}
             style={styles.authorRow}
           >
-            {/* <Image
-              source={{ uri: post.author.avatarUrl }}
-              style={styles.avatar}
-            />
-            <Text style={styles.authorName}>{post.author.name}</Text> */}
+            <Image source={{ uri: avatarUri }} style={styles.avatar} />
+
+            <Text style={styles.authorName}>{user?.name || user?.email}</Text>
           </Animated.View>
           {/* Body */}
           <HtmlTextRender htmlResTxt={htmlResTxt} />
@@ -338,8 +340,8 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   avatar: {
-    width: 40,
-    height: 40,
+    width: 30,
+    height: 30,
     borderRadius: 20,
   },
   authorName: {

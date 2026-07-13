@@ -46,9 +46,6 @@ type AssistantMessage = {
   path?: string;
 };
 type Message = UserMessage | AssistantMessage;
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
-// Replace with your actual image source
-const AVATAR_URI = "https://cdn-icons-png.flaticon.com/512/3177/3177440.png";
 
 // --- Memoized image grid ------------------------------------------------
 // Recomputes row-chunking only when the `images` array reference changes.
@@ -247,7 +244,9 @@ export default function BlogMain({
       console.error(error);
     }
   };
-
+  const BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
+  // Replace with your actual image source
+  const AVATAR_URI = "https://cdn-icons-png.flaticon.com/512/3177/3177440.png";
   const avatarUri = user?.avatar_url
     ? `${BASE_URL}${user.avatar_url}`
     : AVATAR_URI;
