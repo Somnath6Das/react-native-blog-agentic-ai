@@ -13,15 +13,24 @@ import { router, usePathname } from "expo-router";
 import { useMenuStore } from "@/store/blog_store";
 
 function CustomDrawerComponent(props: DrawerContentComponentProps) {
-  // const menuItems = [
-  //   { id: 42, title: "Item 42" },
-  //   { id: 43, title: "Item 43" },
-  //   { id: 44, title: "Item 44" },
-  // ];
   const triggerCreateBlogReset = useMenuStore((s) => s.triggerCreateBlogReset);
   const menuItems = useMenuStore((s) => s.menuItems);
   const reversedItems = [...menuItems].reverse();
   const pathName = usePathname();
+
+  // Centralized nav helper — every drawer navigation goes through here,
+  // so resetKey always gets bumped, no matter which item is tapped.
+  const navigateFromDrawer = (
+    path: string,
+    params?: Record<string, string>,
+  ) => {
+    triggerCreateBlogReset();
+    if (params) {
+      router.push({ pathname: path as any, params });
+    } else {
+      router.push(path as any);
+    }
+  };
 
   return (
     <DrawerContentScrollView {...props}>
@@ -35,7 +44,6 @@ function CustomDrawerComponent(props: DrawerContentComponentProps) {
         <Text style={{ fontSize: 26 }}>Blog Writing Agent</Text>
       </View>
 
-      {/* REPLACED DrawerItemList with a manual "Create Blog" item */}
       <DrawerItem
         label="Create Blog"
         icon={({ color, size }) => (
@@ -52,10 +60,7 @@ function CustomDrawerComponent(props: DrawerContentComponentProps) {
           borderRadius: 24,
           paddingHorizontal: 4,
         }}
-        onPress={() => {
-          triggerCreateBlogReset(); // NEW — always force a reset
-          router.push("/create_blog");
-        }}
+        onPress={() => navigateFromDrawer("/create_blog")}
       />
 
       <View style={{ padding: 16, paddingTop: 25 }}>
@@ -63,6 +68,7 @@ function CustomDrawerComponent(props: DrawerContentComponentProps) {
           Your Previous Blogs
         </Text>
       </View>
+
       {reversedItems.map((item) => {
         const isActive = pathName === `/create_blog/${item.id}`;
         return (
@@ -74,9 +80,8 @@ function CustomDrawerComponent(props: DrawerContentComponentProps) {
             label={item.title}
             labelStyle={{ fontSize: 18 }}
             onPress={() =>
-              router.push({
-                pathname: "/create_blog/[id]",
-                params: { id: String(item.id) },
+              navigateFromDrawer("/create_blog/[id]", {
+                id: String(item.id),
               })
             }
           />

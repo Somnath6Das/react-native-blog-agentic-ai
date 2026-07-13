@@ -1,4 +1,12 @@
-import { Dispatch, SetStateAction, memo, useMemo, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   Alert,
   View,
@@ -22,6 +30,8 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import useAuthStore from "@/store/auth_store";
 import api from "@/utils/api";
 import HtmlTextRender from "../home/HtmlTextRender";
+import { useFocusEffect } from "expo-router";
+import { useMenuStore } from "@/store/blog_store";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const IMAGE_GAP = 8;
@@ -119,18 +129,18 @@ const ImageGrid = memo(function ImageGrid({
 // (and RenderHtml re-parses its whole DOM tree) whenever the list re-renders.
 const MessageRow = memo(function MessageRow({
   item,
-
   avatarUri,
   selectedImageIndex,
   setSelectedImageIndex,
   publishBlog,
+  showSuccess,
 }: {
   item: Message;
-
   avatarUri: string;
   selectedImageIndex: number | null;
   setSelectedImageIndex: (index: number | null) => void;
   publishBlog: () => void;
+  showSuccess: boolean;
 }) {
   if (item.type === "user") {
     return (
@@ -148,9 +158,14 @@ const MessageRow = memo(function MessageRow({
   return (
     <View>
       <View style={styles.assistant}>
-        <TouchableOpacity style={styles.publishButton} onPress={publishBlog}>
-          <Text style={styles.publishButtonText}>Publish Blog</Text>
-        </TouchableOpacity>
+        <View style={styles.published}>
+          <TouchableOpacity style={styles.publishButton} onPress={publishBlog}>
+            <Text style={styles.publishButtonText}>Publish Blog</Text>
+          </TouchableOpacity>
+          {showSuccess && (
+            <Ionicons name="checkmark-circle" size={24} color="green" />
+          )}
+        </View>
       </View>
       <View style={styles.assistantRow}>
         <View style={styles.assistantAvatar}>
@@ -160,13 +175,17 @@ const MessageRow = memo(function MessageRow({
           <HtmlTextRender htmlResTxt={item.html} />
 
           <View style={styles.assistant}>
-            <TouchableOpacity
-              style={styles.publishButton}
-              onPress={publishBlog}
-            >
-              <Text style={styles.publishButtonText}>Publish Blog</Text>
-            </TouchableOpacity>
-
+            <View style={styles.published}>
+              <TouchableOpacity
+                style={styles.publishButton}
+                onPress={publishBlog}
+              >
+                <Text style={styles.publishButtonText}>Publish Blog</Text>
+              </TouchableOpacity>
+              {showSuccess && (
+                <Ionicons name="checkmark-circle" size={24} color="green" />
+              )}
+            </View>
             <ImageGrid
               images={item.images}
               selectedIndex={selectedImageIndex ?? 0}
@@ -206,7 +225,8 @@ export default function BlogMain({
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
     null,
   );
-
+  const resetKey = useMenuStore((state) => state.resetKey);
+  const [showSuccess, setShowSuccess] = useState(false);
   // ✅ NEW — decide once per component instance whether to animate.
   // First time BlogMain ever mounts in this app session -> true, plays once.
   // Every mount after that (including CreateBlogScreen's focus-triggered
@@ -240,10 +260,17 @@ export default function BlogMain({
         htmlPath,
         image: selectedImageUri,
       });
+      setShowSuccess(true);
+      console.log("tick shown");
     } catch (error) {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    setShowSuccess(false);
+  }, [resetKey]);
+
   const BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
   // Replace with your actual image source
   const AVATAR_URI = "https://cdn-icons-png.flaticon.com/512/3177/3177440.png";
@@ -278,6 +305,7 @@ export default function BlogMain({
                   selectedImageIndex={selectedImageIndex}
                   setSelectedImageIndex={setSelectedImageIndex}
                   publishBlog={publishBlog}
+                  showSuccess={showSuccess}
                 />
               ))}
             </ScrollView>
@@ -393,6 +421,10 @@ const styles = StyleSheet.create({
     fontWeight: 600,
   },
   assistantRow: { flexDirection: "row", marginBottom: 16 },
+  published: {
+    flexDirection: "row",
+    gap: 4,
+  },
   assistantAvatar: {
     width: 28,
     height: 28,
@@ -489,42 +521,3 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 });
-
-// tagsStyles for react-native-render-html — keyed by HTML tag, since the
-// server now generates HTML fragments directly (h2, p, ul/li, a, code, pre).
-const htmlStyles = {
-  body: { fontSize: 15, color: "#111827", lineHeight: 22 },
-  p: { fontSize: 18, marginTop: 0, marginBottom: 10 },
-  h1: { fontSize: 21, fontWeight: "700" as const, marginBottom: 8 },
-  h2: {
-    fontSize: 20,
-    fontWeight: "700" as const,
-
-    marginTop: 10,
-    marginBottom: 6,
-  },
-  h3: {
-    fontSize: 18,
-    fontWeight: "700" as const,
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  a: {
-    fontSize: 18,
-    color: "#2563eb",
-    textDecorationLine: "underline" as const,
-  },
-  code: {
-    backgroundColor: "#f3f4f6",
-    paddingHorizontal: 4,
-    borderRadius: 4,
-    color: "#111827",
-  },
-  pre: {
-    backgroundColor: "#f3f4f6",
-    padding: 10,
-    borderRadius: 8,
-    color: "#111827",
-  },
-  li: { marginBottom: 4 },
-};
