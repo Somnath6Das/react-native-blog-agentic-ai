@@ -195,12 +195,6 @@ export default function PostDetail() {
             <Text style={styles.metaText}>
               {formatDateTime(post?.created_at || "")}
             </Text>
-            <View style={styles.dot} />
-            <Ionicons
-              name="bookmark-outline"
-              size={13}
-              color={COLORS.gray500}
-            />
           </Animated.View>
           {/* Author */}
           <Animated.View

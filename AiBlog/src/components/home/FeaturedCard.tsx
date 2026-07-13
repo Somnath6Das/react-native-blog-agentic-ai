@@ -1,22 +1,12 @@
 import React, { useEffect, useRef, useCallback } from "react";
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-} from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import Animated, {
   useSharedValue,
   SharedValue,
   useAnimatedStyle,
   withSpring,
-  withTiming,
   interpolate,
   Extrapolation,
-  useAnimatedReaction,
-  cancelAnimation,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -40,43 +30,85 @@ interface Props {
   posts: Blog[];
 }
 
+// A cloned slide needs a distinct id for React keys, but keeps the same post data
+type ExtendedSlide = Blog & { __cloneKey?: string };
+
 export default function FeaturedCarousel({ posts }: Props) {
-  const count = posts.length;
-  // We use a virtual infinite list: offset = currentIndex * CARD_WIDTH
-  const currentIndex = useSharedValue(0);
-  const translateX = useSharedValue(0);
+  const REAL_COUNT = Math.min(posts.length, 7);
+  const realSlides = posts.slice(0, REAL_COUNT);
+
+  // Build extended strip: [cloneOfLast, ...real, cloneOfFirst]
+  const extendedSlides: ExtendedSlide[] = React.useMemo(() => {
+    if (REAL_COUNT === 0) return [];
+    if (REAL_COUNT === 1) return realSlides; // nothing to loop
+    return [
+      { ...realSlides[REAL_COUNT - 1], __cloneKey: "clone-last" },
+      ...realSlides,
+      { ...realSlides[0], __cloneKey: "clone-first" },
+    ];
+  }, [posts]);
+
+  const EXTENDED_COUNT = extendedSlides.length;
+  const canLoop = REAL_COUNT > 1;
+  // Real slides live at extended indices [1 .. REAL_COUNT]; index 0 and
+  // EXTENDED_COUNT-1 are the clones.
+  const START_INDEX = canLoop ? 1 : 0;
+
+  const currentIndex = useSharedValue(START_INDEX);
+  const translateX = useSharedValue(-START_INDEX * CARD_WIDTH);
   const dragStart = useSharedValue(0);
-  const isDragging = useSharedValue(false);
 
-  // Active dot index (JS side) for rendering
   const [activeIndex, setActiveIndex] = React.useState(0);
-
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const goTo = useCallback(
-    (index: number, animated = true) => {
-      const clamped = ((index % count) + count) % count;
-      currentIndex.value = clamped;
-      translateX.value = animated
-        ? withSpring(-clamped * CARD_WIDTH, {
-            damping: 20,
-            stiffness: 200,
-            mass: 0.8,
-          })
-        : -clamped * CARD_WIDTH;
-      setActiveIndex(clamped);
+  const toRealIndex = useCallback(
+    (extIndex: number) => {
+      if (!canLoop) return extIndex;
+      return (((extIndex - 1) % REAL_COUNT) + REAL_COUNT) % REAL_COUNT;
     },
-    [count],
+    [REAL_COUNT, canLoop],
   );
 
-  // Auto-play
+  const goTo = useCallback(
+    (targetIndex: number, animated = true) => {
+      currentIndex.value = targetIndex;
+      const toValue = -targetIndex * CARD_WIDTH;
+
+      if (animated) {
+        translateX.value = withSpring(
+          toValue,
+          { damping: 20, stiffness: 200, mass: 0.8 },
+          (finished) => {
+            "worklet";
+            if (!finished || !canLoop) return;
+            // Landed on the trailing clone (of the first slide) -> snap to real first
+            if (targetIndex === EXTENDED_COUNT - 1) {
+              translateX.value = -1 * CARD_WIDTH;
+              currentIndex.value = 1;
+            }
+            // Landed on the leading clone (of the last slide) -> snap to real last
+            else if (targetIndex === 0) {
+              translateX.value = -REAL_COUNT * CARD_WIDTH;
+              currentIndex.value = REAL_COUNT;
+            }
+          },
+        );
+      } else {
+        translateX.value = toValue;
+      }
+
+      setActiveIndex(toRealIndex(targetIndex));
+    },
+    [EXTENDED_COUNT, REAL_COUNT, canLoop, toRealIndex],
+  );
+
   const startAutoPlay = useCallback(() => {
+    if (!canLoop) return;
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
-      const next = (currentIndex.value + 1) % count;
-      goTo(next);
+      goTo(currentIndex.value + 1);
     }, AUTO_PLAY_INTERVAL);
-  }, [count, goTo]);
+  }, [goTo, canLoop]);
 
   const stopAutoPlay = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -87,27 +119,23 @@ export default function FeaturedCarousel({ posts }: Props) {
     return () => stopAutoPlay();
   }, [startAutoPlay, stopAutoPlay]);
 
-  // Pan gesture
   const panGesture = Gesture.Pan()
     .onBegin(() => {
-      isDragging.value = true;
       dragStart.value = translateX.value;
       scheduleOnRN(stopAutoPlay);
     })
     .onUpdate((e) => {
-      // Allow rubber-banding at edges
       translateX.value = dragStart.value + e.translationX;
     })
     .onEnd((e) => {
-      isDragging.value = false;
       const velocity = e.velocityX;
       const translation = e.translationX;
       let nextIndex = currentIndex.value;
 
       if (translation < -SWIPE_THRESHOLD || velocity < -500) {
-        nextIndex = (currentIndex.value + 1) % count;
+        nextIndex = currentIndex.value + 1;
       } else if (translation > SWIPE_THRESHOLD || velocity > 500) {
-        nextIndex = (currentIndex.value - 1 + count) % count;
+        nextIndex = currentIndex.value - 1;
       }
 
       scheduleOnRN(goTo, nextIndex);
@@ -116,29 +144,25 @@ export default function FeaturedCarousel({ posts }: Props) {
     .activeOffsetX([-10, 10])
     .failOffsetY([-15, 15]);
 
-  // Animated slide strip style
   const stripStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
   }));
 
-  const goToPost = useCallback(
-    (post: Blog) => {
-      router.push(`/post/${post.id}`);
-    },
-    [router],
-  );
+  const goToPost = useCallback((post: Blog) => {
+    router.push(`/post/${post.id}`);
+  }, []);
+
   return (
     <View style={styles.wrapper}>
       <GestureDetector gesture={panGesture}>
         <View style={styles.clipper}>
           <Animated.View style={[styles.strip, stripStyle]}>
-            {posts.slice(0, 7).map((post, i) => (
+            {extendedSlides.map((post, i) => (
               <SlideItem
-                key={post.id}
+                key={post.__cloneKey ?? post.id}
                 post={post}
                 index={i}
                 currentIndex={currentIndex}
-                count={count}
                 onPress={() => goToPost(post)}
               />
             ))}
@@ -146,13 +170,12 @@ export default function FeaturedCarousel({ posts }: Props) {
         </View>
       </GestureDetector>
 
-      {/* Dot indicators */}
       <View style={styles.dots}>
-        {posts.slice(0, 7).map((post, i) => (
+        {realSlides.map((_, i) => (
           <TouchableOpacity
             key={i}
             onPress={() => {
-              goTo(i);
+              goTo(i + (canLoop ? 1 : 0));
               startAutoPlay();
             }}
             hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
@@ -165,21 +188,17 @@ export default function FeaturedCarousel({ posts }: Props) {
   );
 }
 
-// Individual slide
 function SlideItem({
   post,
   index,
   currentIndex,
-  count,
   onPress,
 }: {
   post: Blog;
   index: number;
   currentIndex: SharedValue<number>;
-  count: number;
   onPress: () => void;
 }) {
-  // Subtle scale + opacity for the active slide
   const animatedStyle = useAnimatedStyle(() => {
     const diff = Math.abs(index - currentIndex.value);
     const scale = interpolate(diff, [0, 1], [1, 0.96], Extrapolation.CLAMP);
@@ -195,7 +214,6 @@ function SlideItem({
         activeOpacity={0.92}
       >
         <Image source={{ uri: post.image }} style={styles.image} />
-        {/* Gradient overlay layers */}
         <View style={styles.overlayTop} />
         <View style={styles.overlayBottom} />
         <View style={styles.content}>
@@ -208,7 +226,6 @@ function SlideItem({
   );
 }
 
-// Animated dot
 function DotIndicator({
   index,
   activeIndex,
@@ -225,10 +242,7 @@ function DotIndicator({
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    width: "100%",
-    marginBottom: SPACING.lg,
-  },
+  wrapper: { width: "100%", marginBottom: SPACING.lg },
   clipper: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
@@ -236,15 +250,8 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.lg,
     ...SHADOWS.strong,
   },
-  strip: {
-    flexDirection: "row",
-    width: CARD_WIDTH * 100, // large enough
-    height: CARD_HEIGHT,
-  },
-  slide: {
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
-  },
+  strip: { flexDirection: "row", width: CARD_WIDTH * 100, height: CARD_HEIGHT },
+  slide: { width: CARD_WIDTH, height: CARD_HEIGHT },
   card: {
     width: "100%",
     height: "100%",
@@ -286,12 +293,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
-  subtitle: {
-    ...FONTS.bodyMD,
-    color: "rgba(255,255,255,0.85)",
-    marginTop: 3,
-  },
-  // Dots
+  subtitle: { ...FONTS.bodyMD, color: "rgba(255,255,255,0.85)", marginTop: 3 },
   dots: {
     flexDirection: "row",
     justifyContent: "center",
@@ -299,16 +301,7 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: SPACING.sm,
   },
-  dot: {
-    height: 7,
-    borderRadius: 4,
-  },
-  dotActive: {
-    width: 22,
-    backgroundColor: COLORS.primary,
-  },
-  dotInactive: {
-    width: 7,
-    backgroundColor: COLORS.gray300,
-  },
+  dot: { height: 7, borderRadius: 4 },
+  dotActive: { width: 22, backgroundColor: COLORS.primary },
+  dotInactive: { width: 7, backgroundColor: COLORS.gray300 },
 });
