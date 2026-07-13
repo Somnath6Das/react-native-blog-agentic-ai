@@ -7,7 +7,7 @@ import {
   View,
   Dimensions,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import { Blog } from "@/utils/get_public_blogs";
 
@@ -39,15 +39,11 @@ export const BlogCard = ({ post }: { post: Blog }) => {
         imageStyle={styles.imageRadius}
         resizeMode="cover"
       >
-        <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.15)", "rgba(0,0,0,0.85)"]}
-          locations={[0, 0.5, 1]}
-          style={styles.gradient}
-        >
+        <BlurView intensity={35} tint="dark" style={styles.blurContainer}>
           <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
             {post.title}
           </Text>
-        </LinearGradient>
+        </BlurView>
       </ImageBackground>
     </TouchableOpacity>
   );
@@ -65,7 +61,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     // subtle elevation to lift the card off the screen
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
@@ -78,10 +74,14 @@ const styles = StyleSheet.create({
   imageRadius: {
     borderRadius: 16,
   },
-  gradient: {
+  blurContainer: {
     paddingHorizontal: 12,
     paddingVertical: 10,
     justifyContent: "flex-end",
+    overflow: "hidden",
+    // if BlurView's own background isn't tinted enough on Android,
+    // this rgba layer gives a consistent look across platforms
+    backgroundColor: "rgba(0,0,0,0.25)",
   },
   title: {
     color: "#fff",
