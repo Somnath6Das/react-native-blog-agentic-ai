@@ -10,6 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+
 import {
   COLORS,
   FONTS,
@@ -20,6 +21,7 @@ import {
 } from "../../constants/theme";
 import { Blog } from "@/utils/get_public_blogs";
 import { router } from "expo-router";
+import { BlurView } from "expo-blur";
 
 const CARD_HEIGHT = SCREEN_WIDTH < 375 ? 220 : SCREEN_WIDTH < 428 ? 260 : 300;
 const CARD_WIDTH = SCREEN_WIDTH - SPACING.md * 2;
@@ -214,13 +216,12 @@ function SlideItem({
         activeOpacity={0.92}
       >
         <Image source={{ uri: post.image }} style={styles.image} />
-        <View style={styles.overlayTop} />
-        <View style={styles.overlayBottom} />
-        <View style={styles.content}>
-          <Text style={styles.title} numberOfLines={2}>
+
+        <BlurView intensity={35} tint="dark" style={styles.blurContainer}>
+          <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
             {post.title}
           </Text>
-        </View>
+        </BlurView>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -280,11 +281,18 @@ const styles = StyleSheet.create({
     height: "32%",
     backgroundColor: "rgba(0,0,0,0.52)",
   },
-  content: {
+  blurContainer: {
     position: "absolute",
-    bottom: SPACING.md,
-    left: SPACING.md,
-    right: SPACING.md,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    justifyContent: "flex-end",
+    overflow: "hidden",
+    // if BlurView's own background isn't tinted enough on Android,
+    // this rgba layer gives a consistent look across platforms
+    backgroundColor: "rgba(0,0,0,0.25)",
   },
   title: {
     ...FONTS.displayLG,

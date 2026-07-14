@@ -108,7 +108,7 @@ export default function HomeScreen() {
           }
           style={styles.header}
         >
-          <Text style={styles.brand}>OUTDOOR</Text>
+          <Text style={styles.brand}>INFODOOR</Text>
         </Animated.View>
 
         {/* Journal heading */}

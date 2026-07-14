@@ -27,6 +27,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS, FONTS, SPACING, SCREEN_HEIGHT } from "../../constants/theme";
 import { BlogCard } from "@/components/home/BlogCard";
 import { Blog, getPublicBlogs } from "@/utils/get_public_blogs";
+import { FlatList } from "react-native-gesture-handler";
 
 // Animate the FlatList itself instead of wrapping it in a ScrollView.
 // Nesting a FlatList inside a ScrollView with the same (vertical) orientation
@@ -107,8 +108,6 @@ export default function ShowAll() {
         data={blogs}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => <BlogCard post={item} />}
-        numColumns={2}
-        columnWrapperStyle={{ gap: 16 }}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
         contentContainerStyle={{

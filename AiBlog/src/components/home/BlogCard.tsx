@@ -11,7 +11,7 @@ import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import { Blog } from "@/utils/get_public_blogs";
 
-const NUM_COLUMNS = 2;
+const NUM_COLUMNS = 1;
 const OUTER_PADDING = 16; // matches the FlatList's contentContainerStyle padding
 const COLUMN_GAP = 16; // matches columnWrapperStyle gap in the parent list
 
@@ -20,7 +20,7 @@ const CARD_WIDTH =
     OUTER_PADDING * 2 -
     COLUMN_GAP * (NUM_COLUMNS - 1)) /
   NUM_COLUMNS;
-const CARD_HEIGHT = 170;
+const CARD_HEIGHT = 200;
 
 export const BlogCard = ({ post }: { post: Blog }) => {
   const handlePress = () => {
@@ -49,8 +49,8 @@ export const BlogCard = ({ post }: { post: Blog }) => {
   );
 };
 
-// Render this inside a FlatList with numColumns={2} and
-// columnWrapperStyle={{ gap: COLUMN_GAP }} as your DB-driven grid
+// Render this inside a FlatList with numColumns={1} (or omit numColumns,
+// since 1 is the default) as your DB-driven single-column list
 
 const styles = StyleSheet.create({
   cardWrapper: {

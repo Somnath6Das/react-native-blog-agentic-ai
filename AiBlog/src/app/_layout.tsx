@@ -5,7 +5,7 @@ import api from "@/utils/api";
 import useAuthStore from "@/store/auth_store";
 import { useMenuStore } from "@/store/blog_store";
 import { ActivityIndicator } from "react-native";
-
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 const RootLayout = () => {
   const hasHydrated = useMenuStore.persist.hasHydrated();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -29,6 +29,7 @@ const RootLayout = () => {
         name: data.name || "",
         email: data.email,
         avatar_url: data.avatar_url || "",
+        created_at: data.created_at,
       });
     } catch (error: any) {
       // Token is invalid/expired — clear it
