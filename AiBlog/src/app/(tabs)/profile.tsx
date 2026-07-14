@@ -32,8 +32,8 @@ import { useMenuStore } from "@/store/blog_store";
 // Replace with your actual image source
 const AVATAR_URI = "https://cdn-icons-png.flaticon.com/512/3177/3177440.png";
 
-const GRADIENT_TOP = "#bd94fc";
-const GRADIENT_BOTTOM = "#3f6ffe";
+const GRADIENT_TOP = "#ffffff";
+const GRADIENT_BOTTOM = "#e5e287";
 const WHITE = "#FFFFFF";
 const TEXT_DARK = "#1A1A1A";
 const TEXT_MUTED = "#7A7A7A";
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "#fff",
   },
   modelCard: {
     width: "70%",
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   },
   root: {
     flex: 1,
-    backgroundColor: "#EBEBEB",
+    backgroundColor: "#fff",
   },
 
   /* ── Header ── */
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: WHITE,
     backgroundColor: WHITE,
-    shadowColor: "#000",
+
     shadowOpacity: 0.18,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   /* ── Card ── */
   card: {
     flex: 1,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: "#fcfcfc",
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     alignItems: "center",
