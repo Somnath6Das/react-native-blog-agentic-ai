@@ -200,6 +200,7 @@ export default function PostDetail() {
             <Image source={{ uri: avatarUri }} style={styles.avatar} />
 
             <Text style={styles.authorName}>{user?.name || user?.email}</Text>
+            <Text style={styles.metaText}>Generated</Text>
           </Animated.View>
           {/* Body */}
           <HtmlTextRender htmlResTxt={htmlResTxt} />
