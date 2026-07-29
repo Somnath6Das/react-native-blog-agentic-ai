@@ -46,19 +46,27 @@ export default function HomeScreen() {
   const fetchBlogs = async () => {
     try {
       const data = await getPublicBlogs();
+
       setBlogs(data);
       // console.log(data);
       setError(null);
       //  total user blogs
-      const userBlogs = data.filter((blog) => blog.user_id === user?.id);
+      const userBlogs = data.filter(
+        (blog) => String(blog.user_id) === String(user?.id),
+      );
+      console.log("total published blogs: " + userBlogs.length);
+
       const existingPostIds = new Set(
-        menuItems.map((item) => item.id).filter((id) => id !== undefined),
+        menuItems
+          .map((item) => item.id)
+          .filter((id) => id !== undefined)
+          .map(String),
       );
-      // Only keep blogs that AREN'T already in the local store
-      // all public blogs
+
       const newBlogs = userBlogs.filter(
-        (blog) => !existingPostIds.has(blog.post_id),
+        (blog) => !existingPostIds.has(String(blog.post_id)),
       );
+      console.log("total generated blogs : " + menuItems.length);
 
       newBlogs.forEach((blog) => {
         addMenuItem({
@@ -79,12 +87,13 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
+    if (!user?.id) return; // wait for hydration
     (async () => {
       setLoading(true);
       await fetchBlogs();
       setLoading(false);
     })();
-  }, []);
+  }, [user?.id]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
