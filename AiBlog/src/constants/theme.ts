@@ -20,6 +20,10 @@ export const COLORS = {
   white: "#FFFFFF",
   overlay: "rgba(0,0,0,0.38)",
   overlayDeep: "rgba(0,0,0,0.6)",
+  yellow: "#F5C518",
+  orange: "#F0A500",
+  text_dark: "#1A1A1A",
+  text_muted: "#AAAAAA",
 };
 
 export const FONTS = {

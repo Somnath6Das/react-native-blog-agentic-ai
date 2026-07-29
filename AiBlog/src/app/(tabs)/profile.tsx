@@ -38,7 +38,6 @@ const WHITE = "#FFFFFF";
 const TEXT_DARK = "#1A1A1A";
 const TEXT_MUTED = "#7A7A7A";
 const ICON_BG = "#FFF8E1";
-const YELLOW = "#F5C518";
 const ORANGE = "#F0A500";
 const AVATAR_SIZE = 120;
 const HEADER_HEIGHT = 140; // fixed header height

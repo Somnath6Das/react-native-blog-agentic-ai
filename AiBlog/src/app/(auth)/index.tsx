@@ -18,12 +18,7 @@ import api from "@/utils/api";
 import { Ionicons } from "@expo/vector-icons";
 import useAuthStore from "@/store/auth_store";
 import { useMenuStore } from "@/store/blog_store";
-
-const YELLOW = "#F5C518";
-const ORANGE = "#F0A500";
-const WHITE = "#FFFFFF";
-const TEXT_DARK = "#1A1A1A";
-const TEXT_MUTED = "#AAAAAA";
+import { COLORS } from "@/constants/theme";
 
 export default function SignupScreen() {
   const { setAuth, clearAuth } = useAuthStore();
@@ -93,7 +88,7 @@ export default function SignupScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <StatusBar barStyle="dark-content" backgroundColor={YELLOW} />
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.yellow} />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -143,7 +138,7 @@ export default function SignupScreen() {
                   <TextInput
                     style={styles.input}
                     placeholder="johndoe@example.com"
-                    placeholderTextColor={TEXT_MUTED}
+                    placeholderTextColor={COLORS.text_muted}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     value={email}
@@ -185,16 +180,16 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: YELLOW,
+    backgroundColor: COLORS.yellow,
   },
   root: {
     flex: 1,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
   },
 
   /* ── Yellow top ── */
   topSection: {
-    backgroundColor: YELLOW,
+    backgroundColor: COLORS.yellow,
     height: 260,
     alignItems: "center",
     justifyContent: "center",
@@ -205,7 +200,7 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: ORANGE,
+    backgroundColor: COLORS.orange,
     top: 40,
     right: "20%",
   },
@@ -236,7 +231,7 @@ const styles = StyleSheet.create({
     height: 28,
     borderBottomLeftRadius: 26,
     borderBottomRightRadius: 26,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
     overflow: "hidden",
     marginBottom: 6,
     alignItems: "center",
@@ -247,7 +242,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderBottomLeftRadius: 18,
     borderBottomRightRadius: 18,
-    backgroundColor: YELLOW,
+    backgroundColor: COLORS.yellow,
     marginTop: 4,
   },
   barsRow: {
@@ -257,14 +252,14 @@ const styles = StyleSheet.create({
   },
   bar: {
     width: 10,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
     borderRadius: 3,
   },
 
   /* ── White card ── */
   card: {
     flex: 1,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     paddingHorizontal: 28,
@@ -276,13 +271,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: "700",
-    color: TEXT_DARK,
+    color: COLORS.text_dark,
     textAlign: "center",
     letterSpacing: 0.3,
   },
   subtitle: {
     fontSize: 14,
-    color: TEXT_MUTED,
+    color: COLORS.text_muted,
     textAlign: "center",
     marginTop: 6,
     marginBottom: 32,
@@ -296,16 +291,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
 
     fontWeight: "500",
-    color: TEXT_DARK,
+    color: COLORS.text_dark,
     marginBottom: 16,
   },
   input: {
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 14,
-    color: TEXT_DARK,
+    color: COLORS.text_dark,
     borderWidth: 1,
     borderColor: "#EFEFEF",
     shadowColor: "#000",
@@ -316,13 +311,13 @@ const styles = StyleSheet.create({
   },
 
   signupBtn: {
-    backgroundColor: YELLOW,
+    backgroundColor: COLORS.yellow,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: "center",
     marginTop: 14,
     marginBottom: 16,
-    shadowColor: ORANGE,
+    shadowColor: COLORS.orange,
     shadowOpacity: 0.4,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
@@ -331,7 +326,7 @@ const styles = StyleSheet.create({
   signupBtnText: {
     fontSize: 16,
     fontWeight: "700",
-    color: WHITE,
+    color: COLORS.white,
     letterSpacing: 0.5,
   },
   error: {
@@ -353,6 +348,6 @@ const styles = StyleSheet.create({
   },
   footerLink: {
     fontSize: 12,
-    color: TEXT_MUTED,
+    color: COLORS.text_muted,
   },
 });
