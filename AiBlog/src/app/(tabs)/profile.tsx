@@ -16,29 +16,16 @@ import useAuthStore from "@/store/auth_store";
 import * as ImagePicker from "expo-image-picker";
 import { handleResult } from "@/utils/image_upload";
 import { useState } from "react";
-import {
-  AntDesign,
-  EvilIcons,
-  Feather,
-  Ionicons,
-  SimpleLineIcons,
-} from "@expo/vector-icons";
+import { AntDesign, Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 // ✅ NEW — needed for the one-time entrance animation
 import Animated, { FadeInDown } from "react-native-reanimated";
 import ProfileName from "@/components/profile/ProfileName";
 import { useMenuStore } from "@/store/blog_store";
-
+import { COLORS } from "@/constants/theme";
 // Replace with your actual image source
 const AVATAR_URI = "https://cdn-icons-png.flaticon.com/512/3177/3177440.png";
 
-const GRADIENT_TOP = "#ffffff";
-const GRADIENT_BOTTOM = "#e5e287";
-const WHITE = "#FFFFFF";
-const TEXT_DARK = "#1A1A1A";
-const TEXT_MUTED = "#7A7A7A";
-const ICON_BG = "#FFF8E1";
-const ORANGE = "#F0A500";
 const AVATAR_SIZE = 120;
 const HEADER_HEIGHT = 140; // fixed header height
 const AVATAR_OVERLAP = AVATAR_SIZE / 1.5; // how much avatar hangs below header
@@ -141,13 +128,13 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
-      <StatusBar barStyle="light-content" backgroundColor={ORANGE} />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.orange} />
 
       <View style={styles.root}>
         {/* ── Teal Header ── */}
         <View style={styles.header}>
           <LinearGradient
-            colors={[GRADIENT_TOP, GRADIENT_BOTTOM]}
+            colors={[COLORS.white, COLORS.gradient_bottom]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -222,7 +209,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: GRADIENT_TOP, // matches header so status bar area looks right
+    backgroundColor: COLORS.white, // matches header so status bar area looks right
   },
   content: {
     flex: 1,
@@ -281,7 +268,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
@@ -292,14 +279,14 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 26,
-    color: TEXT_DARK,
+    color: COLORS.black,
     lineHeight: 30,
     fontWeight: "300",
     marginTop: -2,
   },
   settingsIcon: {
     fontSize: 20,
-    color: TEXT_DARK,
+    color: COLORS.black,
   },
 
   /* ── Avatar — absolute, centered on the header/card boundary ── */
@@ -313,8 +300,8 @@ const styles = StyleSheet.create({
     height: AVATAR_SIZE + 8,
     borderRadius: (AVATAR_SIZE + 8) / 2,
     borderWidth: 4,
-    borderColor: WHITE,
-    backgroundColor: WHITE,
+    borderColor: COLORS.white,
+    backgroundColor: COLORS.white,
 
     shadowOpacity: 0.18,
     shadowRadius: 10,
@@ -348,12 +335,12 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 20,
     fontWeight: "700",
-    color: TEXT_DARK,
+    color: COLORS.black,
     letterSpacing: 0.2,
   },
   email: {
     fontSize: 15,
-    color: TEXT_MUTED,
+    color: COLORS.text_muted,
     marginTop: 4,
     marginBottom: 28,
   },
@@ -366,7 +353,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
     borderRadius: 20,
     paddingVertical: 20,
     paddingHorizontal: 18,
@@ -380,7 +367,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: ICON_BG,
+    backgroundColor: COLORS.icon_bg,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
@@ -391,11 +378,11 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 26,
     fontWeight: "700",
-    color: TEXT_DARK,
+    color: COLORS.black,
   },
   statLabel: {
     fontSize: 13,
-    color: TEXT_MUTED,
+    color: COLORS.text_muted,
     marginTop: 2,
   },
 

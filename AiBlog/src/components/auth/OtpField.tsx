@@ -1,10 +1,11 @@
+import { COLORS } from "@/constants/theme";
 import { StyleSheet, Text, TextInputProps, View } from "react-native";
 import { OtpInput } from "react-native-otp-entry";
 
 interface Props extends TextInputProps {
   onTextChange: (value: string) => void;
 }
-const TEXT_DARK = "#1A1A1A";
+
 export default function OtpField({ onTextChange }: Props) {
   return (
     <View style={{ width: "100%", alignItems: "center" }}>
@@ -38,7 +39,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     marginRight: "auto",
     fontWeight: "500",
-    color: TEXT_DARK,
+    color: COLORS.black,
     marginBottom: 16,
   },
 });

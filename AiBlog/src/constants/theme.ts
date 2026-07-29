@@ -24,6 +24,8 @@ export const COLORS = {
   orange: "#F0A500",
   text_dark: "#1A1A1A",
   text_muted: "#AAAAAA",
+  gradient_bottom: "#e5e287",
+  icon_bg: "#FFF8E1",
 };
 
 export const FONTS = {
