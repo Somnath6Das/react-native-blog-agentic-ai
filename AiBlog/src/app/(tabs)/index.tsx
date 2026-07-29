@@ -137,14 +137,14 @@ export default function HomeScreen() {
           }
           style={styles.popularHeader}
         >
-          <Text style={styles.sectionTitle}>Popular</Text>
+          <Text style={styles.sectionTitle}>Latest</Text>
           <TouchableOpacity onPress={() => router.push("/post/show_all")}>
             <Text style={styles.showAll}>Show all</Text>
           </TouchableOpacity>
         </Animated.View>
 
         {/* Popular list */}
-        {blogs.slice(0, 3).map((post, idx) => (
+        {blogs.slice(0, 5).map((post, idx) => (
           <Animated.View
             key={post.id}
             entering={
