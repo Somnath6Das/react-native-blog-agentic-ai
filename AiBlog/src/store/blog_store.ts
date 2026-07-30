@@ -13,6 +13,10 @@ export interface MenuItem {
 interface MenuState {
   menuItems: MenuItem[];
   resetKey: number;
+
+  totalPublishedBlog: number; // NEW
+  totalGeneratedBlog: number; // NEW
+
   addMenuItem: (
     item: Omit<MenuItem, "id" | "images"> & { images?: string[] },
   ) => number;
@@ -24,6 +28,9 @@ interface MenuState {
   updateMenuItem: (id: number, updates: Partial<Omit<MenuItem, "id">>) => void;
   triggerCreateBlogReset: () => void;
   clearStore: () => Promise<void>;
+
+  setTotalPublishedBlog: (count: number) => void; // NEW
+  setTotalGeneratedBlog: (count: number) => void; // NEW
 }
 
 const getRandomNumber = (min: number, max: number) => {
@@ -35,11 +42,19 @@ export const useMenuStore = create<MenuState>()(
     (set, get) => ({
       menuItems: [],
       resetKey: 0,
+
+      totalPublishedBlog: 0,
+      totalGeneratedBlog: 0,
+
       triggerCreateBlogReset: () =>
-        // NEW
         set((state) => ({ resetKey: state.resetKey + 1 })),
       clearStore: async () => {
-        set({ menuItems: [], resetKey: 0 });
+        set({
+          menuItems: [],
+          resetKey: 0,
+          totalPublishedBlog: 0,
+          totalGeneratedBlog: 0,
+        });
         await AsyncStorage.removeItem("menu-store");
       },
       addMenuItem: (item) => {
@@ -95,12 +110,17 @@ export const useMenuStore = create<MenuState>()(
             item.id === id ? { ...item, ...updates } : item,
           ),
         })),
+      // NEW — two setters below
+      setTotalPublishedBlog: (count) => set({ totalPublishedBlog: count }),
+      setTotalGeneratedBlog: (count) => set({ totalGeneratedBlog: count }),
     }),
     {
       name: "menu-store", // AsyncStorage key
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         menuItems: state.menuItems,
+        totalPublishedBlog: state.totalPublishedBlog,
+        totalGeneratedBlog: state.totalGeneratedBlog,
       }), // NEW — don't persist resetKey, it's just a signal
     },
   ),

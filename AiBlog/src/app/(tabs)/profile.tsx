@@ -37,6 +37,9 @@ const BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
 let hasPlayedProfileIntro = false;
 
 export default function ProfileScreen() {
+  const totalGeneratedBlog = useMenuStore((s) => s.totalGeneratedBlog);
+  const totalPublishedBlog = useMenuStore((s) => s.totalPublishedBlog);
+
   const { user, clearAuth } = useAuthStore();
   const clearAllBlogs = useMenuStore((state) => state.clearStore);
   const [image, setImage] = useState<string | undefined>("");
@@ -158,16 +161,16 @@ export default function ProfileScreen() {
               <View style={styles.statIconCircle}>
                 <Text style={styles.statEmoji}>⭐</Text>
               </View>
-              <Text style={styles.statValue}>51</Text>
-              <Text style={styles.statLabel}>Balance</Text>
+              <Text style={styles.statValue}>{totalGeneratedBlog}</Text>
+              <Text style={styles.statLabel}>Total Generated Blogs</Text>
             </View>
 
             <View style={styles.statCard}>
               <View style={styles.statIconCircle}>
                 <Text style={styles.statEmoji}>🏆</Text>
               </View>
-              <Text style={styles.statValue}>1</Text>
-              <Text style={styles.statLabel}>Level</Text>
+              <Text style={styles.statValue}>{totalPublishedBlog}</Text>
+              <Text style={styles.statLabel}>Total Published Blogs</Text>
             </View>
           </View>
         </Animated.View>
